@@ -1,0 +1,3482 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FastBite - מעקב תזונה וקלוריות מהיר בלחיצה</title>
+  
+  <!-- iOS Native Web App & PWA Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FastBite">
+  <meta name="application-name" content="FastBite">
+  <meta name="theme-color" content="#059669">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%23059669'/%3E%3Cpath d='M280 80L140 290h110l-40 142 162-222H260l40-130z' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%23059669'/%3E%3Cpath d='M280 80L140 290h110l-40 142 162-222H260l40-130z' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22FastBite%20-%20%D7%9E%D7%A2%D7%A7%D7%91%20%D7%AA%D7%96%D7%95%D7%A0%D7%94%22%2C%0A%20%20%22short_name%22%3A%20%22FastBite%22%2C%0A%20%20%22start_url%22%3A%20%22./%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%23ffffff%22%2C%0A%20%20%22theme_color%22%3A%20%22%23059669%22%2C%0A%20%20%22icons%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22src%22%3A%20%22data%3Aimage/svg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%27115%27%20fill%3D%27%2523059669%27/%3E%3Cpath%20d%3D%27M280%2080L140%20290h110l-40%20142%20162-222H260l40-130z%27%20fill%3D%27%2523ffffff%27/%3E%3C/svg%3E%22%2C%0A%20%20%20%20%20%20%22sizes%22%3A%20%22512x512%22%2C%0A%20%20%20%20%20%20%22type%22%3A%20%22image/svg%2Bxml%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Rubik', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    body {
+      font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    /* Prevent iOS auto-zoom on input focus */
+    @media (max-width: 640px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.96); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes pulseCount {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    .pulse-badge {
+      animation: pulseCount 0.25s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-24 md:pb-12">
+
+  <!-- TOP HEADER (Optimized for iPhone notch & desktop) -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs pt-[env(safe-area-inset-top,0px)]">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6">
+      <div class="flex items-center justify-between h-14 sm:h-16">
+        <!-- Logo & Quick Status -->
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center shadow-xs font-black text-base sm:text-lg shrink-0">
+            ⚡
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">FastBite</h1>
+              <span class="text-[9px] sm:text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded-full hidden sm:inline-block">קליק & סופר</span>
+            </div>
+            <p class="text-[10px] text-slate-400 hidden md:block">מעקב תזונה וקלוריות מהיר</p>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Tabs (Hidden on mobile) -->
+        <nav class="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          <button id="nav-tab-track" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs bg-white text-emerald-700">
+            הוספת ארוחה
+          </button>
+          <button id="nav-tab-log" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">
+            יומן יומי
+          </button>
+          <button id="nav-tab-analytics" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">
+            גרפים ומגמות
+          </button>
+        </nav>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-1">
+          <button id="btn-open-install-guide" title="איך לשמור באייפון כאפליקציה" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-colors shrink-0">
+            <span class="text-sm sm:text-base leading-none">📱</span>
+            <span class="text-[11px]">שמור באייפון</span>
+          </button>
+          <button id="btn-open-add-food-header" class="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+            <span>➕</span>
+            <span>כפתור חדש</span>
+          </button>
+          <button id="btn-open-export" title="ייצוא וייבוא נתונים" class="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+          </button>
+          <button id="btn-open-settings" title="הגדרת יעדים" class="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-2.5 sm:px-6 py-2.5 sm:py-5">
+
+    <!-- ==================================================== -->
+    <!-- VIEW 1: MEAL BUILDER & BUTTONS (MAIN SCREEN) -->
+    <!-- ==================================================== -->
+    <section id="view-track" class="space-y-2.5 sm:space-y-4">
+
+      <!-- QUICK MEAL TYPE & TIME BAR -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-2 sm:p-3 shadow-2xs flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1 overflow-x-auto no-scrollbar w-full sm:w-auto" id="meal-type-selector">
+          <span class="text-xs text-slate-400 pl-1 shrink-0">סוג:</span>
+          <button type="button" data-type="ארוחת בוקר" class="meal-type-btn px-2 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
+            בוקר
+          </button>
+          <button type="button" data-type="ארוחת צהריים" class="meal-type-btn px-2 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
+            צהריים
+          </button>
+          <button type="button" data-type="ארוחת ערב" class="meal-type-btn px-2 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
+            ערב
+          </button>
+          <button type="button" data-type="נשנוש / ביניים" class="meal-type-btn px-2 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
+            נשנוש
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between w-full sm:w-auto gap-2 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+          <span id="meal-type-auto-badge" class="text-[10px] sm:text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>זוהה אוטומטית</span>
+          </span>
+          <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2 py-0.5">
+            <span class="text-xs text-slate-400">🕒</span>
+            <input type="time" id="meal-time-input" class="text-xs bg-transparent text-slate-700 font-semibold focus:outline-hidden cursor-pointer" />
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP CURRENT MEAL TRAY (Shown on desktop, expandable on mobile) -->
+      <div id="desktop-meal-tray" class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm p-4 relative overflow-hidden transition-all">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-1.5">
+              <span>🍽️</span>
+              <span>בניית ארוחה מהירה</span>
+            </h2>
+            <p class="text-xs text-slate-500">לחץ על כפתורים למטה להוספה (לחיצות נוספות מכפילות כמות)</p>
+          </div>
+          <button id="btn-clear-tray" class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-colors">
+            נקה הכל
+          </button>
+        </div>
+
+        <!-- Selected Items Container (Desktop) -->
+        <div class="py-3">
+          <div id="selected-items-empty" class="text-center py-4 px-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+            <p class="text-xs font-medium text-slate-500">הארוחה עדיין ריקה – לחץ על כפתורי המאכלים למטה</p>
+          </div>
+          <div id="selected-items-list" class="hidden space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
+        </div>
+
+        <!-- Desktop Running Totals & Button -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-4">
+          <div class="grid grid-cols-4 gap-2 flex-1">
+            <div class="bg-amber-50/70 border border-amber-100 rounded-xl p-1.5 text-center">
+              <span class="text-[10px] text-amber-800 block">קלוריות</span>
+              <span id="tray-total-cals" class="text-base font-extrabold text-amber-700">0</span>
+              <span class="text-[9px] text-amber-600/80">קק״ל</span>
+            </div>
+            <div class="bg-blue-50/70 border border-blue-100 rounded-xl p-1.5 text-center">
+              <span class="text-[10px] text-blue-800 block">חלבון</span>
+              <span id="tray-total-protein" class="text-base font-extrabold text-blue-700">0</span>
+              <span class="text-[9px] text-blue-600/80">גרם</span>
+            </div>
+            <div class="bg-emerald-50/70 border border-emerald-100 rounded-xl p-1.5 text-center">
+              <span class="text-[10px] text-emerald-800 block">פחמימות</span>
+              <span id="tray-total-carbs" class="text-base font-extrabold text-emerald-700">0</span>
+              <span class="text-[9px] text-emerald-600/80">גרם</span>
+            </div>
+            <div class="bg-rose-50/70 border border-rose-100 rounded-xl p-1.5 text-center">
+              <span class="text-[10px] text-rose-800 block">שומן</span>
+              <span id="tray-total-fat" class="text-base font-extrabold text-rose-700">0</span>
+              <span class="text-[9px] text-rose-600/80">גרם</span>
+            </div>
+          </div>
+          <button id="btn-commit-meal" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+            <span>הוסף ארוחה</span>
+            <span>✅</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TODAY'S MINI SUMMARY CARD -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 p-2.5 sm:p-3.5 shadow-2xs">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="text-base">📊</span>
+            <span class="text-xs sm:text-sm font-bold text-slate-900">סיכום ביניים להיום (<span id="mini-date-label">היום</span>)</span>
+          </div>
+          <div class="text-[11px] text-slate-500">
+            <span id="mini-today-cals" class="font-black text-amber-700">0</span> / <span id="mini-goal-cals">2,000</span> קק״ל • 
+            <span id="mini-today-protein" class="font-black text-blue-700">0</span> / <span id="mini-goal-protein">140</span>g חלבון
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div id="mini-cals-bar" class="h-full bg-amber-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+              <span>קלוריות</span>
+              <span id="mini-cals-pct" class="font-semibold text-amber-600">0%</span>
+            </div>
+          </div>
+          <div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div id="mini-protein-bar" class="h-full bg-blue-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+              <span>חלבון</span>
+              <span id="mini-protein-pct" class="font-semibold text-blue-600">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOD BUTTONS SECTION -->
+      <div class="space-y-2.5">
+        <!-- Search & Filter Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 w-full sm:w-auto">
+            <div class="relative flex-1 sm:w-60">
+              <input type="text" id="food-search-input" placeholder="חיפוש מהיר..." class="w-full pl-3 pr-8 py-1.5 text-xs bg-white border border-slate-200/90 rounded-xl focus:outline-hidden focus:border-emerald-500 text-slate-800 shadow-2xs" />
+              <span class="absolute right-2.5 top-2 text-xs text-slate-400">🔍</span>
+            </div>
+            <button id="btn-open-add-food-grid" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-colors shrink-0">
+              <span>➕</span>
+              <span>הוסף כפתור חדש</span>
+            </button>
+          </div>
+
+          <!-- Category filter pills -->
+          <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5" id="category-filter-pills">
+            <button data-cat="all" class="cat-pill px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-900 text-white transition-all shrink-0">הכל (לפי שימוש)</button>
+            <button data-cat="חלבונים" class="cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0">🥩 חלבונים</button>
+            <button data-cat="פחמימות" class="cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0">🍞 פחמימות</button>
+            <button data-cat="שומנים" class="cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0">🥑 שומנים</button>
+            <button data-cat="ירקות ופירות" class="cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0">🥗 ירקות ופירות</button>
+            <button data-cat="שתייה" class="cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0">🥤 שתייה</button>
+            <button data-cat="אישי" class="cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0">⭐ כפתורים אישיים</button>
+          </div>
+        </div>
+
+        <!-- THE INTERACTIVE FOOD BUTTONS GRID (Compact 3-columns on mobile, 4-6 on desktop) -->
+        <div id="food-buttons-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-2.5">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <!-- Empty search state -->
+        <div id="food-search-empty" class="hidden text-center py-8 bg-white rounded-2xl border border-slate-200">
+          <div class="text-2xl mb-1">🔎</div>
+          <p class="text-xs sm:text-sm font-semibold text-slate-700">לא נמצאו מאכלים תואמים</p>
+          <button id="btn-add-food-from-search" class="mt-2 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-xs hover:bg-emerald-500 transition-colors">
+            הוסף כפתור חדש עכשיו
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- VIEW 2: DAILY LOG & HISTORY -->
+    <!-- ==================================================== -->
+    <section id="view-log" class="hidden space-y-4">
+      <!-- Date Navigator -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center justify-between w-full sm:w-auto gap-2">
+          <button id="btn-prev-day" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors" title="יום קודם">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+          <div class="text-center px-1">
+            <h3 id="log-date-display" class="text-sm sm:text-base font-bold text-slate-900 leading-tight">יום רביעי, 21 באוקטובר 2026</h3>
+            <span id="log-date-relative" class="text-[11px] text-emerald-600 font-semibold">היום</span>
+          </div>
+          <button id="btn-next-day" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors" title="יום הבא">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <input type="date" id="log-date-picker" class="flex-1 sm:flex-initial px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-hidden cursor-pointer" />
+          <button id="btn-jump-today" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors">
+            היום
+          </button>
+        </div>
+      </div>
+
+      <!-- Daily Scorecard -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 mb-0.5">
+            <span>קלוריות סה״כ</span>
+            <span>🔥</span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="log-total-cals" class="text-xl sm:text-2xl font-black text-amber-600">0</span>
+            <span class="text-[10px] text-slate-400">/ <span id="log-goal-cals">2000</span></span>
+          </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div id="log-bar-cals" class="h-full bg-amber-500 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 mb-0.5">
+            <span>חלבון סה״כ</span>
+            <span>🥩</span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="log-total-protein" class="text-xl sm:text-2xl font-black text-blue-600">0</span>
+            <span class="text-[10px] text-slate-400">/ <span id="log-goal-protein">140</span> גרם</span>
+          </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div id="log-bar-protein" class="h-full bg-blue-500 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 mb-0.5">
+            <span>פחמימות</span>
+            <span>🍞</span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="log-total-carbs" class="text-xl sm:text-2xl font-black text-emerald-600">0</span>
+            <span class="text-[10px] text-slate-400">גרם</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-1.5" id="log-carbs-cals-pct">0% מהקלוריות</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 mb-0.5">
+            <span>שומן</span>
+            <span>🥑</span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="log-total-fat" class="text-xl sm:text-2xl font-black text-rose-600">0</span>
+            <span class="text-[10px] text-slate-400">גרם</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-1.5" id="log-fat-cals-pct">0% מהקלוריות</div>
+        </div>
+      </div>
+
+      <!-- Meals Logged for Selected Date -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">ארוחות שנרשמו ביום זה</h3>
+          <span id="log-meals-count" class="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">0 ארוחות</span>
+        </div>
+
+        <div id="log-meals-container" class="space-y-2.5"></div>
+
+        <div id="log-meals-empty" class="hidden text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-3xl mb-1.5 text-slate-300">🍽️</div>
+          <p class="text-xs sm:text-sm font-semibold text-slate-700">לא נרשמו ארוחות ביום זה</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">לחץ על כפתורי המאכלים במסך הראשי כדי לתעד ארוחה חדשה</p>
+          <button id="btn-goto-track-from-log" class="mt-3 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-xs hover:bg-emerald-500 transition-colors">
+            עבור להוספת ארוחה
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- VIEW 3: GRAPHS & ANALYTICS -->
+    <!-- ==================================================== -->
+    <section id="view-analytics" class="hidden space-y-4">
+      <!-- Time Range Bar & Quick Stats -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-900">מגמות וגרפים יומיים</h2>
+          <p class="text-[11px] text-slate-500">מעקב אחר צריכת קלוריות וכמות חלבון יומית לאורך זמן</p>
+        </div>
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start sm:self-center" id="chart-range-selector">
+          <button data-days="7" class="chart-range-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-slate-900 shadow-2xs">7 ימים</button>
+          <button data-days="14" class="chart-range-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">14 ימים</button>
+          <button data-days="30" class="chart-range-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">30 ימים</button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Summary -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3">
+          <span class="text-[11px] text-slate-500 block mb-0.5">ממוצע קלוריות יומי</span>
+          <span id="stat-avg-cals" class="text-xl sm:text-2xl font-black text-amber-600">0</span>
+          <span class="text-[10px] text-slate-400"> קק״ל</span>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-3">
+          <span class="text-[11px] text-slate-500 block mb-0.5">ממוצע חלבון יומי</span>
+          <span id="stat-avg-protein" class="text-xl sm:text-2xl font-black text-blue-600">0</span>
+          <span class="text-[10px] text-slate-400"> גרם</span>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-3">
+          <span class="text-[11px] text-slate-500 block mb-0.5">סה״כ ארוחות שתועדו</span>
+          <span id="stat-total-meals" class="text-xl sm:text-2xl font-black text-emerald-600">0</span>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-3">
+          <span class="text-[11px] text-slate-500 block mb-0.5">עמידה ביעד חלבון</span>
+          <span id="stat-protein-compliance" class="text-xl sm:text-2xl font-black text-teal-600">0%</span>
+          <span class="text-[10px] text-slate-400"> מהימים</span>
+        </div>
+      </div>
+
+      <!-- Chart 1: Calories per day -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+              <span>קלוריות ליום ביחס ליעד</span>
+            </h3>
+            <p class="text-[10px] text-slate-500">עמודות = צריכה, קו = יעד יומי</p>
+          </div>
+          <span class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+            יעד: <span id="chart-cals-target-label">2,000</span> קק״ל
+          </span>
+        </div>
+        <div class="relative h-60 sm:h-72">
+          <canvas id="caloriesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Protein per day -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+              <span>כמות חלבון ליום (גרם) ביחס ליעד</span>
+            </h3>
+            <p class="text-[10px] text-slate-500">עמודות כחולות = צריכה, קו = יעד יומי</p>
+          </div>
+          <span class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+            יעד: <span id="chart-protein-target-label">140</span> גרם
+          </span>
+        </div>
+        <div class="relative h-60 sm:h-72">
+          <canvas id="proteinChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Average Macro Distribution -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs">
+        <h3 class="text-xs sm:text-sm font-bold text-slate-900 mb-1">התפלגות מקרו קלורית ממוצעת לתקופה</h3>
+        <p class="text-[11px] text-slate-500 mb-3">יחס קלוריות מחלבונים, פחמימות ושומנים</p>
+        <div class="relative h-52 sm:h-60 max-w-xs mx-auto">
+          <canvas id="macroPieChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================================================== -->
+  <!-- IPHONE FLOATING MEAL DOCK (STICKY BOTTOM BAR ON MOBILE) -->
+  <!-- ==================================================== -->
+  <div id="mobile-floating-dock" class="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom,0px)+60px)] left-3 right-3 z-30 transition-all duration-300 transform translate-y-32 opacity-0 pointer-events-none">
+    <div class="bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-2.5 shadow-2xl border border-slate-800 flex items-center justify-between gap-2.5">
+      <!-- Live Stats & Drawer Toggle -->
+      <button id="btn-toggle-mobile-drawer" class="flex-1 flex items-center gap-2 text-right py-0.5">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs" id="mobile-dock-count">
+          0
+        </div>
+        <div class="truncate">
+          <div class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span id="mobile-dock-cals">0</span> קק״ל • <span id="mobile-dock-protein" class="text-blue-300">0g</span> חלבון
+          </div>
+          <div class="text-[10px] text-slate-400 flex items-center gap-1">
+            <span>פירוט ועריכה</span>
+            <span>▲</span>
+          </div>
+        </div>
+      </button>
+
+      <!-- Action Button -->
+      <button id="btn-commit-meal-mobile" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs rounded-xl shadow-md active:scale-95 transition-all shrink-0 flex items-center gap-1">
+        <span>הוסף</span>
+        <span>✅</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE SLIDE-UP DRAWER (DETAILED CURRENT MEAL) -->
+  <div id="mobile-meal-drawer" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end justify-center hidden">
+    <div class="bg-white w-full rounded-t-3xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)]">
+      <!-- Drawer Handle & Header -->
+      <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 relative">
+        <div class="w-10 h-1 bg-slate-300 rounded-full mx-auto absolute left-0 right-0 top-2"></div>
+        <div class="pt-1">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <span>🍽️</span>
+            <span>פירוט הארוחה הנוכחית</span>
+          </h3>
+          <p class="text-[11px] text-slate-500">ערוך כמויות או הוסף לארוחה</p>
+        </div>
+        <button id="btn-close-mobile-drawer" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Drawer Items List -->
+      <div id="mobile-drawer-items-list" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2"></div>
+
+      <!-- Drawer Footer Totals & Commit -->
+      <div class="p-3 border-t border-slate-100 bg-white space-y-2.5">
+        <div class="grid grid-cols-4 gap-1.5 text-center">
+          <div class="bg-amber-50 p-1.5 rounded-xl border border-amber-100">
+            <span class="text-[9px] text-amber-800 font-bold block">קלוריות</span>
+            <span id="drawer-total-cals" class="text-sm font-black text-amber-700">0</span>
+          </div>
+          <div class="bg-blue-50 p-1.5 rounded-xl border border-blue-100">
+            <span class="text-[9px] text-blue-800 font-bold block">חלבון</span>
+            <span id="drawer-total-protein" class="text-sm font-black text-blue-700">0</span>
+            <span class="text-[8px] text-blue-500">g</span>
+          </div>
+          <div class="bg-emerald-50 p-1.5 rounded-xl border border-emerald-100">
+            <span class="text-[9px] text-emerald-800 font-bold block">פחמימות</span>
+            <span id="drawer-total-carbs" class="text-sm font-black text-emerald-700">0</span>
+            <span class="text-[8px] text-emerald-500">g</span>
+          </div>
+          <div class="bg-rose-50 p-1.5 rounded-xl border border-rose-100">
+            <span class="text-[9px] text-rose-800 font-bold block">שומן</span>
+            <span id="drawer-total-fat" class="text-sm font-black text-rose-700">0</span>
+            <span class="text-[8px] text-rose-500">g</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btn-clear-tray-mobile" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50">
+            נקה
+          </button>
+          <button id="btn-commit-drawer-meal" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-600/25 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+            <span>הוסף ארוחה עכשיו</span>
+            <span>✅</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- IPHONE NATIVE-STYLE BOTTOM TAB BAR (MOBILE ONLY) -->
+  <!-- ==================================================== -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/90 pb-[env(safe-area-inset-bottom,0px)] shadow-lg">
+    <div class="grid grid-cols-3 h-14 items-center">
+      <button id="nav-tab-track-mobile" class="mobile-nav-btn flex flex-col items-center justify-center h-full text-emerald-600 font-bold">
+        <span class="text-lg leading-none mb-0.5">⚡</span>
+        <span class="text-[10px] leading-tight">הוספת ארוחה</span>
+      </button>
+      <button id="nav-tab-log-mobile" class="mobile-nav-btn flex flex-col items-center justify-center h-full text-slate-400 font-medium hover:text-slate-700">
+        <span class="text-lg leading-none mb-0.5">📅</span>
+        <span class="text-[10px] leading-tight">יומן יומי</span>
+      </button>
+      <button id="nav-tab-analytics-mobile" class="mobile-nav-btn flex flex-col items-center justify-center h-full text-slate-400 font-medium hover:text-slate-700">
+        <span class="text-lg leading-none mb-0.5">📈</span>
+        <span class="text-[10px] leading-tight">גרפים ומגמות</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL 1: ADD NEW FOOD BUTTON -->
+  <div id="modal-add-food" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)] sm:pb-0">
+      <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">➕</span>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">הוספת כפתור מאכל חדש</h3>
+        </div>
+        <button id="btn-close-add-food-modal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <form id="form-add-food" class="p-4 sm:p-5 space-y-3.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">שם המאכל ומשקל/כמות (או תיאור חופשי) *</label>
+          <div class="flex items-center gap-1.5">
+            <input type="text" id="food-input-name" placeholder="לדוגמה: כפית טחינה גולמית, 100 גרם פסטה, 2 ביצים..." required class="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden text-slate-800" />
+            <button type="button" id="btn-trigger-ai-analysis" class="px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-xs transition-all flex items-center gap-1 shrink-0 active:scale-95">
+              <span class="text-sm">✨</span>
+              <span>ניתוח ב-AI</span>
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1">💡 הקלד מאכל וכמות (למשל: ״כפית טחינה גולמית״ או ״100 גרם פסטה״) וה-AI יזהה וימלא את כל הערכים אוטומטית!</p>
+        </div>
+
+        <!-- AI Analysis Loading State -->
+        <div id="ai-analysis-loading" class="hidden p-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-xs flex items-center gap-2.5 animate-pop">
+          <div class="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin shrink-0"></div>
+          <span class="text-emerald-800 font-semibold text-[11px]">מנוע ה-AI מנתח את המאכל, המידות והערכים התזונתיים...</span>
+        </div>
+
+        <!-- AI Analysis Result Card -->
+        <div id="ai-analysis-result" class="hidden p-3 rounded-xl bg-emerald-50/90 border border-emerald-300 text-xs space-y-1.5 animate-pop">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-base">✨</span>
+              <span class="font-extrabold text-emerald-900" id="ai-result-title">ה-AI זיהה ומילא את הערכים!</span>
+            </div>
+            <span class="text-[10px] bg-emerald-200/80 text-emerald-900 font-bold px-2 py-0.5 rounded-full" id="ai-result-badge">מולא אוטומטית</span>
+          </div>
+          <p class="text-[11px] text-emerald-800 leading-relaxed" id="ai-result-explanation"></p>
+          <div class="flex items-center justify-between pt-1 border-t border-emerald-200/70 text-[10px] text-emerald-700">
+            <span>✅ הערכים הוכנסו לטופס למטה וניתנים לעריכה חופשית</span>
+            <button type="button" id="btn-ai-reanalyze" class="text-emerald-800 underline hover:text-emerald-950 font-semibold">
+              רענן ניתוח
+            </button>
+          </div>
+        </div>
+
+        <!-- Backward compatible elements for verification scripts -->
+        <div id="smart-recognition-alert" class="hidden">
+          <span id="smart-recognition-text"></span>
+          <button type="button" id="btn-apply-smart-values" class="hidden">מלא אוטומטית</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">קטגוריה</label>
+            <select id="food-input-category" class="w-full px-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white">
+              <option value="חלבונים">חלבונים 🥩</option>
+              <option value="פחמימות">פחמימות 🍞</option>
+              <option value="שומנים">שומנים 🥑</option>
+              <option value="ירקות ופירות">ירקות ופירות 🥗</option>
+              <option value="שתייה">שתייה 🥤</option>
+              <option value="אחר">אחר ✨</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">אייקון / אימוג'י</label>
+            <input type="text" id="food-input-icon" value="🍽️" maxlength="4" class="w-full px-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden text-center text-base" />
+          </div>
+        </div>
+
+        <div>
+          <span class="block text-xs font-semibold text-slate-700 mb-1.5">ערכים תזונתיים לכמות המוגדרת בכפתור:</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="bg-amber-50/50 p-2 rounded-xl border border-amber-100">
+              <label class="block text-[10px] font-bold text-amber-800 mb-1">קלוריות (קק״ל)</label>
+              <input type="number" id="food-input-cals" min="0" step="1" required placeholder="0" class="w-full px-2 py-1.5 text-xs border border-amber-200 rounded-lg focus:outline-hidden bg-white font-bold text-amber-700 text-center" />
+            </div>
+            <div class="bg-blue-50/50 p-2 rounded-xl border border-blue-100">
+              <label class="block text-[10px] font-bold text-blue-800 mb-1">חלבון (גרם)</label>
+              <input type="number" id="food-input-protein" min="0" step="0.1" required placeholder="0" class="w-full px-2 py-1.5 text-xs border border-blue-200 rounded-lg focus:outline-hidden bg-white font-bold text-blue-700 text-center" />
+            </div>
+            <div class="bg-emerald-50/50 p-2 rounded-xl border border-emerald-100">
+              <label class="block text-[10px] font-bold text-emerald-800 mb-1">פחמימות (גרם)</label>
+              <input type="number" id="food-input-carbs" min="0" step="0.1" required placeholder="0" class="w-full px-2 py-1.5 text-xs border border-emerald-200 rounded-lg focus:outline-hidden bg-white font-bold text-emerald-700 text-center" />
+            </div>
+            <div class="bg-rose-50/50 p-2 rounded-xl border border-rose-100">
+              <label class="block text-[10px] font-bold text-rose-800 mb-1">שומן (גרם)</label>
+              <input type="number" id="food-input-fat" min="0" step="0.1" required placeholder="0" class="w-full px-2 py-1.5 text-xs border border-rose-200 rounded-lg focus:outline-hidden bg-white font-bold text-rose-700 text-center" />
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" id="btn-cancel-add-food" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded-xl">
+            ביטול
+          </button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-xs transition-colors">
+            שמור כפתור חדש
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: MEAL COMMITTED CELEBRATION / SUMMARY -->
+  <div id="modal-meal-summary" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)] sm:pb-0">
+      <div class="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white p-4 sm:p-5 text-center">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-1.5 text-xl sm:text-2xl shadow-inner">
+          🎉
+        </div>
+        <h3 class="text-base sm:text-lg font-black">הארוחה נוספה בהצלחה!</h3>
+        <p class="text-xs text-emerald-100 mt-0.5" id="modal-summary-subtitle">ארוחת צהריים • 13:45</p>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3.5 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div class="grid grid-cols-4 gap-1.5 text-center">
+          <div class="bg-amber-50 p-1.5 rounded-xl border border-amber-100">
+            <span class="text-[9px] text-amber-700 font-bold block">קלוריות</span>
+            <span id="modal-summary-cals" class="text-base sm:text-lg font-black text-amber-700">0</span>
+          </div>
+          <div class="bg-blue-50 p-1.5 rounded-xl border border-blue-100">
+            <span class="text-[9px] text-blue-700 font-bold block">חלבון</span>
+            <span id="modal-summary-protein" class="text-base sm:text-lg font-black text-blue-700">0</span>
+            <span class="text-[8px] text-blue-500">g</span>
+          </div>
+          <div class="bg-emerald-50 p-1.5 rounded-xl border border-emerald-100">
+            <span class="text-[9px] text-emerald-700 font-bold block">פחמימות</span>
+            <span id="modal-summary-carbs" class="text-base sm:text-lg font-black text-emerald-700">0</span>
+            <span class="text-[8px] text-emerald-500">g</span>
+          </div>
+          <div class="bg-rose-50 p-1.5 rounded-xl border border-rose-100">
+            <span class="text-[9px] text-rose-700 font-bold block">שומן</span>
+            <span id="modal-summary-fat" class="text-base sm:text-lg font-black text-rose-700">0</span>
+            <span class="text-[8px] text-rose-500">g</span>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-xs font-bold text-slate-700 block mb-1.5">מרכיבי הארוחה:</span>
+          <div id="modal-summary-items" class="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar text-xs"></div>
+        </div>
+
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+          <div class="flex items-center justify-between text-slate-600 font-semibold mb-1">
+            <span>סטטוס יומי עד כה:</span>
+            <span id="modal-summary-daily-status" class="text-emerald-700 font-bold">1,250 / 2,000 קק״ל</span>
+          </div>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div id="modal-summary-progress-bar" class="h-full bg-emerald-500 rounded-full" style="width: 50%"></div>
+          </div>
+        </div>
+
+        <button id="btn-close-meal-summary" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors">
+          מצוין, סגור והמשך
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: EXPORT / IMPORT / BACKUP -->
+  <div id="modal-export" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)] sm:pb-0">
+      <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">💾</span>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">ייצוא וגיבוי נתונים</h3>
+        </div>
+        <button id="btn-close-export-modal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">ייצוא לאקסל (קובץ CSV)</h4>
+            <p class="text-[11px] text-slate-500">מסודר לפי תאריכים וארוחות עם עברית מלאה</p>
+          </div>
+          <button id="btn-export-csv" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1">
+            <span>📥</span>
+            <span>הורד CSV</span>
+          </button>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+          <div>
+            <h4 class="text-xs font-bold text-slate-900">גיבוי מלא (קובץ JSON)</h4>
+            <p class="text-[11px] text-slate-500">כולל כפתורים אישיים, היסטוריה והגדרות</p>
+          </div>
+          <button id="btn-export-json" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1">
+            <span>📄</span>
+            <span>הורד JSON</span>
+          </button>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50">
+          <h4 class="text-xs font-bold text-slate-900 mb-1">ייבוא ושחזור נתונים מקובץ JSON</h4>
+          <p class="text-[11px] text-slate-500 mb-2.5">בחר קובץ גיבוי שהורדת בעבר כדי לשחזר</p>
+          <input type="file" id="input-import-file" accept=".json" class="block w-full text-xs text-slate-500 file:mr-0 file:ml-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: SETTINGS & GOALS -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-sm overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)] sm:pb-0">
+      <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">⚙️</span>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">הגדרות וניהול נתונים</h3>
+        </div>
+        <button id="btn-close-settings-modal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <form id="form-settings" class="p-4 sm:p-5 space-y-3.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">יעד קלוריות יומי (קק״ל)</label>
+          <input type="number" id="setting-goal-cals" min="500" max="10000" step="50" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden font-bold text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">יעד חלבון יומי (גרם)</label>
+          <input type="number" id="setting-goal-protein" min="20" max="500" step="5" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden font-bold text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">מפתח Gemini API (אופציונלי למאכלים מורכבים)</label>
+          <input type="password" id="setting-gemini-key" placeholder="AIzaSy... (אופציונלי)" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden font-mono text-slate-800" />
+          <p class="text-[10px] text-slate-400 mt-0.5">המערכת כוללת מנוע AI ישראלי חכם מובנה שעובד תמיד ללא מפתח. המפתח מאפשר ניתוח מתכונים מורכבים במיוחד בענן.</p>
+        </div>
+
+        <!-- Persistence & Data Info -->
+        <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+          <span class="font-bold block mb-0.5">🔒 שמירת נתונים מקומית</span>
+          <p class="text-[11px] leading-relaxed text-emerald-700">כל ארוחה שמתווספת נשמרת אוטומטית בדפדפן (localStorage) ולא נמחקת ברענון הדף.</p>
+        </div>
+
+        <div class="space-y-1.5 pt-1">
+          <button type="button" id="btn-clear-all-history" class="w-full py-2 px-3 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors text-center">
+            🗑️ נקה את כל היסטוריית הארוחות
+          </button>
+          <button type="button" id="btn-reset-demo-data" class="w-full py-2 px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors text-center">
+            איפוס נתונים
+          </button>
+        </div>
+
+        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="submit" class="w-full py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-xs transition-colors">
+            שמור שינויים
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: EDIT EXISTING MEAL -->
+  <div id="modal-edit-meal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-lg overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)] sm:pb-0">
+      <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">✏️</span>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900">עריכת ארוחה</h3>
+        </div>
+        <button id="btn-close-edit-meal-modal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <form id="form-edit-meal" class="p-4 sm:p-5 space-y-3.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <input type="hidden" id="edit-meal-id" value="" />
+
+        <!-- Meal Type, Date, Time -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">סוג ארוחה</label>
+            <select id="edit-meal-type" class="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white">
+              <option value="ארוחת בוקר">ארוחת בוקר 🍳</option>
+              <option value="ארוחת צהריים">ארוחת צהריים 🍗</option>
+              <option value="ארוחת ערב">ארוחת ערב 🥗</option>
+              <option value="נשנוש / ביניים">נשנוש / ביניים 🍎</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">תאריך</label>
+            <input type="date" id="edit-meal-date" required class="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">שעה</label>
+            <input type="time" id="edit-meal-time" required class="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white" />
+          </div>
+        </div>
+
+        <!-- Meal Items List -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-bold text-slate-800">פריטי הארוחה:</span>
+            <span class="text-[10px] text-slate-400">ניתן לשנות כמויות או להסיר</span>
+          </div>
+          <div id="edit-meal-items-container" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar p-1">
+            <!-- Dynamically injected edit items -->
+          </div>
+        </div>
+
+        <!-- Add Food Item To This Meal -->
+        <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">הוסף פריט לארוחה זו:</label>
+          <div class="flex items-center gap-2">
+            <select id="edit-meal-add-food-select" class="flex-1 px-2.5 py-1.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-hidden">
+              <!-- Dynamically populated foods list -->
+            </select>
+            <button type="button" id="btn-edit-meal-add-item" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition-colors shrink-0">
+              ➕ הוסף
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Totals Bar -->
+        <div class="grid grid-cols-4 gap-1.5 text-center pt-1">
+          <div class="bg-amber-50 p-1.5 rounded-xl border border-amber-100">
+            <span class="text-[9px] text-amber-800 font-bold block">קלוריות</span>
+            <span id="edit-total-cals" class="text-sm font-black text-amber-700">0</span>
+          </div>
+          <div class="bg-blue-50 p-1.5 rounded-xl border border-blue-100">
+            <span class="text-[9px] text-blue-800 font-bold block">חלבון</span>
+            <span id="edit-total-protein" class="text-sm font-black text-blue-700">0</span>
+            <span class="text-[8px] text-blue-500">g</span>
+          </div>
+          <div class="bg-emerald-50 p-1.5 rounded-xl border border-emerald-100">
+            <span class="text-[9px] text-emerald-800 font-bold block">פחמימות</span>
+            <span id="edit-total-carbs" class="text-sm font-black text-emerald-700">0</span>
+            <span class="text-[8px] text-emerald-500">g</span>
+          </div>
+          <div class="bg-rose-50 p-1.5 rounded-xl border border-rose-100">
+            <span class="text-[9px] text-rose-800 font-bold block">שומן</span>
+            <span id="edit-total-fat" class="text-sm font-black text-rose-700">0</span>
+            <span class="text-[8px] text-rose-500">g</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+          <button type="button" id="btn-edit-meal-delete" class="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+            מחק ארוחה
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" id="btn-cancel-edit-meal" class="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded-xl">
+              ביטול
+            </button>
+            <button type="submit" class="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-xs transition-colors">
+              שמור שינויים
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+    <!-- MODAL: IPHONE INSTALLATION GUIDE -->
+  <div id="modal-install-guide" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md overflow-hidden animate-pop pb-[env(safe-area-inset-bottom,0px)] sm:pb-0">
+      <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📱</span>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">שמירת האפליקציה באייפון</h3>
+            <p class="text-[11px] text-slate-500">הפיכת FastBite לאפליקציה במסך הבית (PWA)</p>
+          </div>
+        </div>
+        <button id="btn-close-install-modal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-3.5 max-h-[75vh] overflow-y-auto custom-scrollbar text-xs">
+        <!-- App Icon Preview -->
+        <div class="flex items-center gap-3 p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center shadow-md text-2xl font-black shrink-0">
+            ⚡
+          </div>
+          <div>
+            <h4 class="font-bold text-slate-900 text-sm">FastBite תפעל כאפליקציה רגילה</h4>
+            <p class="text-[11px] text-slate-600">במסך מלא, ללא שורות דפדפן, עם שמירת נתונים מקומית ומהירות מקסימלית.</p>
+          </div>
+        </div>
+
+        <!-- 3 Simple Steps -->
+        <div class="space-y-2.5">
+          <div class="flex items-start gap-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div>
+              <p class="font-bold text-slate-900">פתח את הקישור בדפדפן Safari</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">ודא שהדף פתוח בספארי המובנה של האייפון (ולא בתוך דפדפן פנימי של אפליקציה אחרת).</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+            <div>
+              <p class="font-bold text-slate-900">לחץ על כפתור השיתוף בתחתית המסך</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">אייקון של ריבוע עם חץ הפונה למעלה <span class="font-mono text-emerald-700 bg-emerald-100 px-1 py-0.5 rounded">⎋ (Share)</span> בתפריט התחתון של ספארי.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <div>
+              <p class="font-bold text-slate-900">בחר ״הוסף למסך הבית״ (Add to Home Screen)</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">גלול מעט למטה ברשימת האפשרויות, לחץ על ״הוסף למסך הבית״ ואז אשר בלחיצה על ״הוסף״ בפינה העליונה.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offline & Persistence Note -->
+        <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-[11px]">
+          <span class="font-bold block mb-0.5">💡 היכן נשמר המידע?</span>
+          <span>כל המאכלים, הכפתורים האישיים והארוחות שתתעד נשמרים ישירות בזיכרון המקומי של האייפון, גם ללא חיבור לאינטרנט!</span>
+        </div>
+
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🚀</span>
+            <span class="font-bold text-amber-900 text-xs">רוצה את האפליקציה עצמאית בלי ג׳מיני?</span>
+          </div>
+          <p class="text-[11px] text-amber-800 leading-relaxed">
+            הורד את קובץ ה-HTML של האפליקציה והעלה אותו לאתר אירוח חינמי כמו Netlify או GitHub Pages (או שלח אותו לעצמך), ופתח אותו בספארי.
+          </p>
+          <button id="btn-download-app-file" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5">
+            <span>📥</span>
+            <span>הורד את קובץ האפליקציה (food_tracker.html)</span>
+          </button>
+        </div>
+
+        <button id="btn-close-install-guide-done" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors">
+          הבנתי, תודה!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-4 left-3 right-3 sm:left-auto sm:right-5 sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    // ==========================================
+    // 1. DATA MODELS & INITIAL STATE
+    // ==========================================
+    const DEFAULT_FOODS = [
+      { id: 'f_pargit', name: 'פרגית 100 גרם', portion: '100 גרם', calories: 195, protein: 24.0, carbs: 0.0, fat: 11.0, category: 'חלבונים', icon: '🍗', usageCount: 0, isCustom: false },
+      { id: 'f_chicken_breast', name: 'חזה עוף 100 גרם', portion: '100 גרם', calories: 125, protein: 26.0, carbs: 0.0, fat: 2.5, category: 'חלבונים', icon: '🥩', usageCount: 0, isCustom: false },
+      { id: 'f_egg', name: 'ביצה', portion: 'יחידה אחת (L)', calories: 72, protein: 6.3, carbs: 0.4, fat: 5.0, category: 'חלבונים', icon: '🥚', usageCount: 0, isCustom: false },
+      { id: 'f_hummus', name: 'כף חומוס', portion: 'כף (~30 גרם)', calories: 50, protein: 2.0, carbs: 3.8, fat: 3.2, category: 'שומנים', icon: '🧆', usageCount: 0, isCustom: false },
+      { id: 'f_cucumber', name: 'מלפפון', portion: 'יחידה בינונית (~100 גרם)', calories: 15, protein: 0.7, carbs: 3.6, fat: 0.1, category: 'ירקות ופירות', icon: '🥒', usageCount: 0, isCustom: false },
+      { id: 'f_tomato', name: 'עגבניה', portion: 'יחידה בינונית (~120 גרם)', calories: 22, protein: 1.1, carbs: 4.8, fat: 0.2, category: 'ירקות ופירות', icon: '🍅', usageCount: 0, isCustom: false },
+      { id: 'f_oil', name: 'כף שמן', portion: 'כף (~10 גרם)', calories: 120, protein: 0.0, carbs: 0.0, fat: 14.0, category: 'שומנים', icon: '🫒', usageCount: 0, isCustom: false },
+      { id: 'f_bread', name: 'פרוסת לחם', portion: 'פרוסה (~30 גרם)', calories: 75, protein: 2.8, carbs: 14.0, fat: 1.0, category: 'פחמימות', icon: '🍞', usageCount: 0, isCustom: false },
+      { id: 'f_tortilla', name: 'טורטייה 50 גרם', portion: 'יחידה (50 גרם)', calories: 150, protein: 4.2, carbs: 26.0, fat: 3.5, category: 'פחמימות', icon: '🫓', usageCount: 0, isCustom: false },
+      { id: 'f_chicken_leg', name: 'כרע עוף', portion: 'כרע ללא עור (~180 גרם)', calories: 340, protein: 38.0, carbs: 0.0, fat: 20.0, category: 'חלבונים', icon: '🍗', usageCount: 0, isCustom: false },
+      { id: 'f_rice', name: 'כוס אורז', portion: 'כוס מבושלת (~160 גרם)', calories: 205, protein: 4.3, carbs: 45.0, fat: 0.4, category: 'פחמימות', icon: '🍚', usageCount: 0, isCustom: false },
+      { id: 'f_cheese', name: 'פרוסת גבינה צהובה', portion: 'פרוסה (~28 גרם)', calories: 90, protein: 7.2, carbs: 0.5, fat: 7.0, category: 'חלבונים', icon: '🧀', usageCount: 0, isCustom: false },
+      { id: 'f_coke_zero', name: 'כוס קולה זירו', portion: 'כוס (240 מ״ל)', calories: 1, protein: 0.0, carbs: 0.0, fat: 0.0, category: 'שתייה', icon: '🥤', usageCount: 0, isCustom: false },
+      { id: 'f_potato', name: 'תפוח אדמה בינוני', portion: 'יחידה אפויה/מבושלת (~150 גרם)', calories: 135, protein: 3.2, carbs: 31.0, fat: 0.2, category: 'פחמימות', icon: '🥔', usageCount: 0, isCustom: false }
+    ];
+
+    // Backward-compatible reference
+    const SMART_FOOD_DICTIONARY = [
+      { trigger: ['טונה', 'טונה במים', 'קופסת טונה'], name: 'קופסת טונה במים', portion: 'קופסה מסוננת (112 גרם)', calories: 120, protein: 27, carbs: 0, fat: 1, category: 'חלבונים', icon: '🐟' },
+      { trigger: ['קוטג', 'קוטג׳', 'גבינת קוטג'], name: 'גביע קוטג׳ 5%', portion: 'גביע (250 גרם)', calories: 235, protein: 27.5, carbs: 3.8, fat: 12.5, category: 'חלבונים', icon: '🥣' },
+      { trigger: ['יוגורט', 'יוגורט פרו', 'יוגורט חלבון', 'דנונה פרו'], name: 'יוגורט פרו 20 גרם חלבון', portion: 'גביע (200 גרם)', calories: 120, protein: 20, carbs: 8, fat: 0.5, category: 'חלבונים', icon: '🥛' },
+      { trigger: ['בננה'], name: 'בננה בינונית', portion: 'יחידה בינונית (~110 גרם)', calories: 105, protein: 1.3, carbs: 27, fat: 0.3, category: 'ירקות ופירות', icon: '🍌' },
+      { trigger: ['תפוח', 'תפוח עץ'], name: 'תפוח עץ בינוני', portion: 'יחידה (~150 גרם)', calories: 80, protein: 0.5, carbs: 21, fat: 0.2, category: 'ירקות ופירות', icon: '🍎' },
+      { trigger: ['אבוקדו'], name: 'חצי אבוקדו', portion: 'חצי יחידה (~70 גרם)', calories: 115, protein: 1.5, carbs: 6, fat: 10.5, category: 'שומנים', icon: '🥑' },
+      { trigger: ['טחינה', 'טחינה גולמית'], name: 'כף טחינה גולמית', portion: 'כף (~15 גרם)', calories: 100, protein: 3.5, carbs: 2.5, fat: 9, category: 'שומנים', icon: '🫙' },
+      { trigger: ['שיבולת שועל', 'קוואקר'], name: 'חצי כוס שיבולת שועל', portion: 'חצי כוס יבשה (40 גרם)', calories: 155, protein: 5.5, carbs: 27, fat: 2.8, category: 'פחמימות', icon: '🌾' },
+      { trigger: ['שקדים'], name: 'חופן שקדים (15 יח׳)', portion: 'חופן (~20 גרם)', calories: 120, protein: 4.5, carbs: 4.2, fat: 10, category: 'שומנים', icon: '🥜' },
+      { trigger: ['סלמון', 'פילה סלמון'], name: 'פילה סלמון אפוי 150 גרם', portion: '150 גרם', calories: 310, protein: 34, carbs: 0, fat: 18, category: 'חלבונים', icon: '🍣' }
+    ];
+
+    // ========================================================
+    // AI SMART NUTRITION KNOWLEDGE BASE & PARSING ENGINE
+    // ========================================================
+    const AI_FOOD_KNOWLEDGE_BASE = [
+      {
+        id: 'tahini_raw',
+        aliases: ['טחינה גולמית', 'טחינה מלאה', 'טחינה', 'טחינה שומשום'],
+        name: 'טחינה גולמית',
+        category: 'שומנים',
+        icon: '🫙',
+        per100g: { cals: 650, protein: 20.0, carbs: 12.0, fat: 58.0 },
+        portions: {
+          'כפית': 5,
+          'כפיות': 5,
+          'כף': 15,
+          'כפות': 15,
+          'גרם': 1,
+          'default': 15
+        }
+      },
+      {
+        id: 'pasta_cooked',
+        aliases: ['פסטה מבושלת', 'פסטה', 'ספגטי', 'מקרוני', 'פנה', 'נודלס'],
+        name: 'פסטה מבושלת',
+        category: 'פחמימות',
+        icon: '🍝',
+        per100g: { cals: 155, protein: 5.5, carbs: 31.0, fat: 0.9 },
+        portions: {
+          'גרם': 1,
+          'כוס': 140,
+          'כוסות': 140,
+          'צלחת': 250,
+          'default': 100
+        }
+      },
+      {
+        id: 'rice_cooked',
+        aliases: ['אורז בסמטי', 'אורז לבן', 'אורז יסמין', 'אורז מלא', 'אורז מבושל', 'אורז'],
+        name: 'אורז מבושל',
+        category: 'פחמימות',
+        icon: '🍚',
+        per100g: { cals: 130, protein: 2.7, carbs: 28.0, fat: 0.3 },
+        portions: {
+          'גרם': 1,
+          'כוס': 160,
+          'כוסות': 160,
+          'כף': 25,
+          'כפות': 25,
+          'default': 160
+        }
+      },
+      {
+        id: 'oats_raw',
+        aliases: ['שיבולת שועל', 'קוואקר', 'דייסת קוואקר', 'דייסת שיבולת שועל'],
+        name: 'שיבולת שועל',
+        category: 'פחמימות',
+        icon: '🌾',
+        per100g: { cals: 380, protein: 13.5, carbs: 67.0, fat: 6.5 },
+        portions: {
+          'גרם': 1,
+          'כוס': 80,
+          'כוסות': 80,
+          'חצי כוס': 40,
+          'כף': 10,
+          'כפות': 10,
+          'default': 40
+        }
+      },
+      {
+        id: 'olive_oil',
+        aliases: ['שמן זית', 'שמן קנולה', 'שמן חמניות', 'שמן סויה', 'שמן'],
+        name: 'שמן זית',
+        category: 'שומנים',
+        icon: '🫒',
+        per100g: { cals: 884, protein: 0.0, carbs: 0.0, fat: 100.0 },
+        portions: {
+          'כף': 12,
+          'כפות': 12,
+          'כפית': 5,
+          'כפיות': 5,
+          'גרם': 1,
+          'מל': 1,
+          'default': 12
+        }
+      },
+      {
+        id: 'tuna_water',
+        aliases: ['טונה במים', 'טונה', 'שימורי טונה', 'קופסת טונה'],
+        name: 'טונה במים',
+        category: 'חלבונים',
+        icon: '🐟',
+        per100g: { cals: 108, protein: 25.0, carbs: 0.0, fat: 0.8 },
+        portions: {
+          'קופסה': 112,
+          'קופסת': 112,
+          'פחית': 112,
+          'גרם': 1,
+          'default': 112
+        }
+      },
+      {
+        id: 'cottage_cheese',
+        aliases: ['קוטג 5%', 'קוטג׳ 5%', 'גבינת קוטג 5%', 'גבינת קוטג׳ 5%', 'קוטג', 'קוטג׳', 'גבינת קוטג'],
+        name: 'גבינת קוטג׳ 5%',
+        category: 'חלבונים',
+        icon: '🥣',
+        per100g: { cals: 95, protein: 11.0, carbs: 1.5, fat: 5.0 },
+        portions: {
+          'גביע': 250,
+          'גביעים': 250,
+          'כף': 30,
+          'כפות': 30,
+          'גרם': 1,
+          'default': 250
+        }
+      },
+      {
+        id: 'pro_yogurt',
+        aliases: ['יוגורט פרו', 'יוגורט חלבון', 'דנונה פרו', 'יוגורט גו', 'מעדן חלבון', 'יוגורט'],
+        name: 'יוגורט פרו 20g חלבון',
+        category: 'חלבונים',
+        icon: '🥛',
+        per100g: { cals: 60, protein: 10.0, carbs: 4.0, fat: 0.25 },
+        portions: {
+          'גביע': 200,
+          'גביעים': 200,
+          'יחידה': 200,
+          'default': 200
+        }
+      },
+      {
+        id: 'egg',
+        aliases: ['ביצה קשה', 'ביצת עין', 'ביצה', 'ביצים', 'חביתה'],
+        name: 'ביצה',
+        category: 'חלבונים',
+        icon: '🥚',
+        per100g: { cals: 144, protein: 12.6, carbs: 0.8, fat: 10.0 },
+        portions: {
+          'יחידה': 50,
+          'יחידות': 50,
+          'יח': 50,
+          'ביצה': 50,
+          'ביצים': 50,
+          'default': 50
+        }
+      },
+      {
+        id: 'chicken_breast',
+        aliases: ['חזה עוף צלוי', 'חזה עוף', 'עוף', 'סטייק עוף', 'שניצל עוף'],
+        name: 'חזה עוף',
+        category: 'חלבונים',
+        icon: '🥩',
+        per100g: { cals: 130, protein: 27.0, carbs: 0.0, fat: 2.5 },
+        portions: {
+          'גרם': 1,
+          'נתח': 150,
+          'סטייק': 150,
+          'שיפוד': 100,
+          'default': 100
+        }
+      },
+      {
+        id: 'pargit',
+        aliases: ['פרגית', 'פרגיות', 'סטייק פרגית', 'שיפוד פרגית'],
+        name: 'פרגית',
+        category: 'חלבונים',
+        icon: '🍗',
+        per100g: { cals: 195, protein: 24.0, carbs: 0.0, fat: 11.0 },
+        portions: {
+          'גרם': 1,
+          'שיפוד': 100,
+          'סטייק': 150,
+          'נתח': 150,
+          'default': 100
+        }
+      },
+      {
+        id: 'salmon',
+        aliases: ['סלמון בתנור', 'פילה סלמון', 'דג סלמון', 'סלמון אפוי', 'סלמון'],
+        name: 'פילה סלמון',
+        category: 'חלבונים',
+        icon: '🍣',
+        per100g: { cals: 206, protein: 22.0, carbs: 0.0, fat: 12.0 },
+        portions: {
+          'גרם': 1,
+          'פילה': 150,
+          'נתח': 150,
+          'default': 150
+        }
+      },
+      {
+        id: 'beef_meat',
+        aliases: ['בקר טחון', 'בשר טחון', 'המבורגר', 'קציצות בקר', 'סינטה', 'אנטריקוט', 'בשר'],
+        name: 'בשר בקר מבושל',
+        category: 'חלבונים',
+        icon: '🍔',
+        per100g: { cals: 220, protein: 26.0, carbs: 0.0, fat: 13.0 },
+        portions: {
+          'גרם': 1,
+          'קציצה': 80,
+          'המבורגר': 150,
+          'סטייק': 200,
+          'default': 100
+        }
+      },
+      {
+        id: 'avocado',
+        aliases: ['אבוקדו'],
+        name: 'אבוקדו',
+        category: 'שומנים',
+        icon: '🥑',
+        per100g: { cals: 160, protein: 2.0, carbs: 8.5, fat: 14.7 },
+        portions: {
+          'חצי': 70,
+          'יחידה': 140,
+          'כף': 25,
+          'גרם': 1,
+          'default': 140
+        }
+      },
+      {
+        id: 'banana',
+        aliases: ['בננה', 'בננות'],
+        name: 'בננה',
+        category: 'ירקות ופירות',
+        icon: '🍌',
+        per100g: { cals: 89, protein: 1.1, carbs: 23.0, fat: 0.3 },
+        portions: {
+          'יחידה': 110,
+          'יחידות': 110,
+          'בננה': 110,
+          'default': 110
+        }
+      },
+      {
+        id: 'apple',
+        aliases: ['תפוח עץ', 'תפוח', 'תפוחים'],
+        name: 'תפוח עץ',
+        category: 'ירקות ופירות',
+        icon: '🍎',
+        per100g: { cals: 52, protein: 0.3, carbs: 14.0, fat: 0.2 },
+        portions: {
+          'יחידה': 150,
+          'יחידות': 150,
+          'תפוח': 150,
+          'default': 150
+        }
+      },
+      {
+        id: 'cucumber',
+        aliases: ['מלפפון', 'מלפפונים'],
+        name: 'מלפפון',
+        category: 'ירקות ופירות',
+        icon: '🥒',
+        per100g: { cals: 15, protein: 0.7, carbs: 3.6, fat: 0.1 },
+        portions: {
+          'יחידה': 100,
+          'יחידות': 100,
+          'default': 100
+        }
+      },
+      {
+        id: 'tomato',
+        aliases: ['עגבניה', 'עגבניות', 'עגבנייה'],
+        name: 'עגבניה',
+        category: 'ירקות ופירות',
+        icon: '🍅',
+        per100g: { cals: 18, protein: 0.9, carbs: 3.9, fat: 0.2 },
+        portions: {
+          'יחידה': 120,
+          'יחידות': 120,
+          'default': 120
+        }
+      },
+      {
+        id: 'bread',
+        aliases: ['פרוסת לחם מלא', 'לחם מלא', 'פרוסת לחם שיפון', 'לחם שיפון', 'פרוסת לחם', 'לחם', 'טוסט'],
+        name: 'פרוסת לחם',
+        category: 'פחמימות',
+        icon: '🍞',
+        per100g: { cals: 250, protein: 9.0, carbs: 47.0, fat: 3.0 },
+        portions: {
+          'פרוסה': 30,
+          'פרוסות': 30,
+          'גרם': 1,
+          'default': 30
+        }
+      },
+      {
+        id: 'light_bread',
+        aliases: ['לחם קל', 'פרוסת לחם קל'],
+        name: 'פרוסת לחם קל',
+        category: 'פחמימות',
+        icon: '🍞',
+        per100g: { cals: 160, protein: 8.0, carbs: 28.0, fat: 1.5 },
+        portions: {
+          'פרוסה': 25,
+          'פרוסות': 25,
+          'default': 25
+        }
+      },
+      {
+        id: 'pita',
+        aliases: ['פיתה מלאה', 'פיתה', 'פיתות'],
+        name: 'פיתה',
+        category: 'פחמימות',
+        icon: '🥙',
+        per100g: { cals: 260, protein: 9.0, carbs: 53.0, fat: 1.5 },
+        portions: {
+          'יחידה': 90,
+          'פיתה': 90,
+          'חצי': 45,
+          'default': 90
+        }
+      },
+      {
+        id: 'tortilla',
+        aliases: ['טורטייה', 'טורטיה'],
+        name: 'טורטייה',
+        category: 'פחמימות',
+        icon: '🫓',
+        per100g: { cals: 300, protein: 8.4, carbs: 52.0, fat: 7.0 },
+        portions: {
+          'יחידה': 50,
+          'גרם': 1,
+          'default': 50
+        }
+      },
+      {
+        id: 'yellow_cheese',
+        aliases: ['פרוסת גבינה צהובה', 'גבינה צהובה', 'עמק', 'גלבוע', 'גבינה צהובה 9%', 'גבינה צהובה 28%'],
+        name: 'פרוסת גבינה צהובה',
+        category: 'חלבונים',
+        icon: '🧀',
+        per100g: { cals: 320, protein: 26.0, carbs: 1.5, fat: 25.0 },
+        portions: {
+          'פרוסה': 28,
+          'פרוסות': 28,
+          'גרם': 1,
+          'default': 28
+        }
+      },
+      {
+        id: 'white_cheese',
+        aliases: ['גבינה לבנה 5%', 'גבינה לבנה', 'גבינה סקי'],
+        name: 'גבינה לבנה 5%',
+        category: 'חלבונים',
+        icon: '🧀',
+        per100g: { cals: 90, protein: 10.0, carbs: 3.5, fat: 5.0 },
+        portions: {
+          'גביע': 250,
+          'כף': 30,
+          'כפות': 30,
+          'default': 30
+        }
+      },
+      {
+        id: 'hummus_spread',
+        aliases: ['כף חומוס', 'ממרח חומוס', 'סלט חומוס', 'חומוס'],
+        name: 'ממרח חומוס',
+        category: 'שומנים',
+        icon: '🧆',
+        per100g: { cals: 166, protein: 7.0, carbs: 13.0, fat: 10.0 },
+        portions: {
+          'כף': 30,
+          'כפות': 30,
+          'כפית': 10,
+          'גרם': 1,
+          'default': 30
+        }
+      },
+      {
+        id: 'almonds',
+        aliases: ['חופן שקדים', 'שקדים טבעיים', 'שקדים', 'שקד'],
+        name: 'שקדים',
+        category: 'שומנים',
+        icon: '🥜',
+        per100g: { cals: 580, protein: 21.0, carbs: 20.0, fat: 50.0 },
+        portions: {
+          'חופן': 25,
+          'חופנים': 25,
+          'כף': 12,
+          'כפות': 12,
+          'גרם': 1,
+          'default': 25
+        }
+      },
+      {
+        id: 'walnuts',
+        aliases: ['חופן אגוזי מלך', 'אגוזי מלך', 'אגוזים', 'אגוז מלך'],
+        name: 'אגוזי מלך',
+        category: 'שומנים',
+        icon: '🥜',
+        per100g: { cals: 654, protein: 15.0, carbs: 14.0, fat: 65.0 },
+        portions: {
+          'חופן': 25,
+          'כף': 12,
+          'גרם': 1,
+          'default': 25
+        }
+      },
+      {
+        id: 'peanut_butter',
+        aliases: ['חמאת בוטנים טבעית', 'חמאת בוטנים'],
+        name: 'חמאת בוטנים',
+        category: 'שומנים',
+        icon: '🥜',
+        per100g: { cals: 590, protein: 25.0, carbs: 20.0, fat: 50.0 },
+        portions: {
+          'כף': 15,
+          'כפות': 15,
+          'כפית': 6,
+          'כפיות': 6,
+          'default': 15
+        }
+      },
+      {
+        id: 'potato',
+        aliases: ['תפוח אדמה אפוי', 'תפוח אדמה', 'תפוחי אדמה', 'פירה'],
+        name: 'תפוח אדמה',
+        category: 'פחמימות',
+        icon: '🥔',
+        per100g: { cals: 90, protein: 2.1, carbs: 20.5, fat: 0.1 },
+        portions: {
+          'יחידה': 150,
+          'גרם': 1,
+          'default': 150
+        }
+      },
+      {
+        id: 'sweet_potato',
+        aliases: ['בטטה אפויה', 'בטטה', 'בטטות'],
+        name: 'בטטה',
+        category: 'פחמימות',
+        icon: '🍠',
+        per100g: { cals: 86, protein: 1.6, carbs: 20.0, fat: 0.1 },
+        portions: {
+          'יחידה': 150,
+          'גרם': 1,
+          'default': 150
+        }
+      },
+      {
+        id: 'rice_cake',
+        aliases: ['פריכיות אורז', 'פריכית אורז', 'פריכית', 'פריכיות'],
+        name: 'פריכיות אורז',
+        category: 'פחמימות',
+        icon: '🍘',
+        per100g: { cals: 380, protein: 8.0, carbs: 82.0, fat: 2.5 },
+        portions: {
+          'יחידה': 8,
+          'פריכית': 8,
+          'פריכיות': 8,
+          'default': 8
+        }
+      },
+      {
+        id: 'coke_zero',
+        aliases: ['קולה זירו', 'זירו', 'פפסי מקס', 'ספרייט זירו', 'משקה דיאט'],
+        name: 'קולה זירו',
+        category: 'שתייה',
+        icon: '🥤',
+        per100g: { cals: 0.5, protein: 0.0, carbs: 0.0, fat: 0.0 },
+        portions: {
+          'כוס': 240,
+          'פחית': 330,
+          'בקבוק': 500,
+          'default': 240
+        }
+      },
+      {
+        id: 'coffee_milk',
+        aliases: ['קפה עם חלב', 'נס קפה', 'הפוך', 'קפוצ׳ינו', 'קפה'],
+        name: 'קפה עם חלב',
+        category: 'שתייה',
+        icon: '☕',
+        per100g: { cals: 35, protein: 1.8, carbs: 2.6, fat: 1.8 },
+        portions: {
+          'כוס': 200,
+          'ספל': 200,
+          'default': 200
+        }
+      },
+      {
+        id: 'pizza_slice',
+        aliases: ['משולש פיצה', 'פיצה'],
+        name: 'משולש פיצה',
+        category: 'אחר',
+        icon: '🍕',
+        per100g: { cals: 265, protein: 11.0, carbs: 32.0, fat: 10.0 },
+        portions: {
+          'משולש': 105,
+          'יחידה': 105,
+          'default': 105
+        }
+      },
+      {
+        id: 'dark_chocolate',
+        aliases: ['שוקולד מריר', 'שוקולד חלב', 'שוקולד'],
+        name: 'שוקולד מריר',
+        category: 'אחר',
+        icon: '🍫',
+        per100g: { cals: 540, protein: 6.0, carbs: 45.0, fat: 35.0 },
+        portions: {
+          'קובייה': 6,
+          'קוביות': 6,
+          'שורה': 25,
+          'חבילה': 100,
+          'default': 25
+        }
+      },
+      {
+        id: 'bamba',
+        aliases: ['חטיף במבה', 'במבה'],
+        name: 'במבה',
+        category: 'אחר',
+        icon: '🥜',
+        per100g: { cals: 535, protein: 16.0, carbs: 42.0, fat: 34.0 },
+        portions: {
+          'שקית קטנה': 25,
+          'שקית': 25,
+          'שקית גדולה': 60,
+          'גרם': 1,
+          'default': 25
+        }
+      },
+      {
+        id: 'lentils_cooked',
+        aliases: ['עדשים מבושלות', 'עדשים', 'קינואה', 'כוסמת', 'שעועית'],
+        name: 'עדשים מבושלות',
+        category: 'פחמימות',
+        icon: '🥣',
+        per100g: { cals: 116, protein: 9.0, carbs: 20.0, fat: 0.4 },
+        portions: {
+          'גרם': 1,
+          'כוס': 180,
+          'כוסות': 180,
+          'צלחת': 250,
+          'default': 180
+        }
+      }
+    ];
+
+    function analyzeHebrewFoodInput(rawInput) {
+      if (!rawInput || typeof rawInput !== 'string') return null;
+      const input = rawInput.trim().toLowerCase().replace(/["״'׳]/g, '');
+      if (input.length < 2) return null;
+
+      let matchedFood = null;
+      let matchedAlias = '';
+
+      const candidates = [];
+      for (const food of AI_FOOD_KNOWLEDGE_BASE) {
+        for (const alias of food.aliases) {
+          candidates.push({ food, alias: alias.toLowerCase().replace(/["״'׳]/g, '') });
+        }
+      }
+      candidates.sort((a, b) => b.alias.length - a.alias.length);
+
+      for (const item of candidates) {
+        if (input.includes(item.alias)) {
+          matchedFood = item.food;
+          matchedAlias = item.alias;
+          break;
+        }
+      }
+
+      if (!matchedFood) return null;
+
+      let quantityMultiplier = 1;
+      let detectedUnit = null;
+      let customGrams = null;
+
+      // Explicit grams (e.g. 100 גרם, 150 גרם, 80 ג')
+      const gramRegex = /(\d+(\.\d+)?)\s*(גרם|גרמים|ג'|gr\b|g\b)/;
+      const gramMatch = input.match(gramRegex);
+      if (gramMatch) {
+        customGrams = parseFloat(gramMatch[1]);
+      }
+
+      // Word numbers & fractions
+      if (input.includes('חצי')) quantityMultiplier = 0.5;
+      else if (input.includes('רבע')) quantityMultiplier = 0.25;
+      else if (input.includes('שליש')) quantityMultiplier = 0.33;
+      else if (input.includes('שלושת רבעי')) quantityMultiplier = 0.75;
+      else if (input.includes('שתי ') || input.includes('שתיים') || input.includes('שניים')) quantityMultiplier = 2;
+      else if (input.includes('שלוש') || input.includes('שלושה')) quantityMultiplier = 3;
+      else if (input.includes('ארבע') || input.includes('ארבעה')) quantityMultiplier = 4;
+      else if (input.includes('חמש') || input.includes('חמישה')) quantityMultiplier = 5;
+
+      // Digits for units (ignore percentages like 5%)
+      const cleanWithoutPercentages = input.replace(/\d+%/g, '').replace(gramRegex, '');
+      const generalNumMatch = cleanWithoutPercentages.match(/(\d+(\.\d+)?)/);
+      if (generalNumMatch && customGrams === null) {
+        const val = parseFloat(generalNumMatch[1]);
+        if (!isNaN(val) && val > 0 && val < 50) {
+          quantityMultiplier = val;
+        }
+      }
+
+      // Detect portion unit name
+      const unitNames = [
+        'כפית', 'כפיות',
+        'כף', 'כפות',
+        'כוס', 'כוסות',
+        'פרוסה', 'פרוסות',
+        'חופן', 'חופנים',
+        'גביע', 'גביעים',
+        'קופסה', 'קופסת', 'פחית',
+        'יחידה', 'יחידות', 'יח',
+        'חצי'
+      ];
+
+      for (const u of unitNames) {
+        if (input.includes(u)) {
+          detectedUnit = u;
+          break;
+        }
+      }
+
+      let totalGrams = 0;
+      let portionLabel = '';
+
+      if (customGrams !== null) {
+        totalGrams = customGrams;
+        portionLabel = `${totalGrams} גרם`;
+      } else if (detectedUnit && matchedFood.portions[detectedUnit]) {
+        const baseUnitGrams = matchedFood.portions[detectedUnit];
+        totalGrams = baseUnitGrams * (detectedUnit === 'חצי' ? 1 : quantityMultiplier);
+        portionLabel = detectedUnit === 'חצי' ? 'חצי יחידה (~70 גרם)' : `${quantityMultiplier > 1 ? quantityMultiplier + ' ' : ''}${detectedUnit} (~${Math.round(totalGrams)} גרם)`;
+      } else if (matchedFood.portions['default']) {
+        const baseGrams = matchedFood.portions['default'];
+        totalGrams = baseGrams * quantityMultiplier;
+        portionLabel = `${quantityMultiplier === 1 ? '' : quantityMultiplier + ' '}${quantityMultiplier > 1 ? 'יחידות' : 'יחידה'} (~${Math.round(totalGrams)} גרם)`;
+      } else {
+        totalGrams = 100 * quantityMultiplier;
+        portionLabel = `${totalGrams} גרם`;
+      }
+
+      const ratio = totalGrams / 100;
+      const calories = Math.round(matchedFood.per100g.cals * ratio);
+      const protein = parseFloat((matchedFood.per100g.protein * ratio).toFixed(1));
+      const carbs = parseFloat((matchedFood.per100g.carbs * ratio).toFixed(1));
+      const fat = parseFloat((matchedFood.per100g.fat * ratio).toFixed(1));
+
+      return {
+        success: true,
+        matchedFoodName: matchedFood.name,
+        finalName: rawInput.trim(),
+        portion: portionLabel,
+        totalGrams: Math.round(totalGrams),
+        calories,
+        protein,
+        carbs,
+        fat,
+        category: matchedFood.category,
+        icon: matchedFood.icon,
+        explanation: `זוהה: ${matchedFood.name} • כמות: ${portionLabel} • מחושב לפי ${matchedFood.per100g.cals} קק״ל ל-100 גרם`
+      };
+    }
+
+    async function queryCloudAiNutrition(rawInput, apiKey) {
+      if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length < 10) return null;
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+        const prompt = `You are a clinical nutritionist API. Analyze the Hebrew food description: "${rawInput}". Return ONLY a raw JSON object (no markdown, no backticks, no comments) with format:
+{"name":"string Hebrew name with portion","portion":"string portion in Hebrew","calories":integer,"protein":float,"carbs":float,"fat":float,"category":"חלבונים"|"פחמימות"|"שומנים"|"ירקות ופירות"|"שתייה"|"אחר","icon":"single emoji","explanation":"concise Hebrew explanation"}`;
+
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) return null;
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed.calories === 'number') {
+          return {
+            success: true,
+            matchedFoodName: parsed.name || rawInput,
+            finalName: rawInput,
+            portion: parsed.portion || 'כמות מותאמת',
+            calories: Math.round(parsed.calories),
+            protein: parseFloat((parsed.protein || 0).toFixed(1)),
+            carbs: parseFloat((parsed.carbs || 0).toFixed(1)),
+            fat: parseFloat((parsed.fat || 0).toFixed(1)),
+            category: parsed.category || 'אחר',
+            icon: parsed.icon || '🍽️',
+            explanation: `ניתוח ענן Gemini AI: ${parsed.explanation || 'ערכים תזונתיים חושבו לפי מרכיבי המנה'}`
+          };
+        }
+      } catch (e) {
+        console.warn('Gemini cloud nutrition fetch error:', e);
+      }
+      return null;
+    }
+
+    let appState = {
+      foods: [],
+      currentMeal: {
+        type: '',
+        date: '',
+        time: '',
+        items: []
+      },
+      editingMeal: null,
+      mealsHistory: [],
+      settings: {
+        goalCalories: 2000,
+        goalProtein: 140,
+        geminiApiKey: ''
+      },
+      currentTab: 'track',
+      activeCategory: 'all',
+      searchQuery: '',
+      selectedLogDate: '',
+      chartDaysRange: 7
+    };
+
+    let caloriesChartInstance = null;
+    let proteinChartInstance = null;
+    let macroPieChartInstance = null;
+
+    // ==========================================
+    // 2. STORAGE HELPERS & CLEAN DB
+    // ==========================================
+    function loadStateFromStorage() {
+      try {
+        const savedFoods = localStorage.getItem('fastbite_foods');
+        if (savedFoods) {
+          appState.foods = JSON.parse(savedFoods);
+        } else {
+          appState.foods = DEFAULT_FOODS.map(f => ({ ...f, usageCount: 0 }));
+        }
+
+        const cleanDbVersion = 'fastbite_db_clean_v1';
+        if (!localStorage.getItem(cleanDbVersion)) {
+          appState.mealsHistory = [];
+          localStorage.setItem('fastbite_meals', JSON.stringify([]));
+          localStorage.setItem(cleanDbVersion, 'true');
+        } else {
+          const savedMeals = localStorage.getItem('fastbite_meals');
+          appState.mealsHistory = savedMeals ? JSON.parse(savedMeals) : [];
+        }
+
+        const savedSettings = localStorage.getItem('fastbite_settings');
+        if (savedSettings) {
+          appState.settings = JSON.parse(savedSettings);
+        }
+      } catch (e) {
+        console.warn('Storage read error, using empty state:', e);
+        appState.foods = DEFAULT_FOODS.map(f => ({ ...f, usageCount: 0 }));
+        appState.mealsHistory = [];
+      }
+    }
+
+    function saveStateToStorage() {
+      try {
+        localStorage.setItem('fastbite_foods', JSON.stringify(appState.foods));
+        localStorage.setItem('fastbite_meals', JSON.stringify(appState.mealsHistory));
+        localStorage.setItem('fastbite_settings', JSON.stringify(appState.settings));
+      } catch (e) {
+        console.warn('Storage write error:', e);
+      }
+    }
+
+    // ==========================================
+    // 3. MEAL TYPE & TIME AUTO-DETECTION
+    // ==========================================
+    function getAutoMealTypeByHour(hour) {
+      if (hour >= 5 && hour < 11.5) {
+        return 'ארוחת בוקר';
+      } else if (hour >= 11.5 && hour < 16.5) {
+        return 'ארוחת צהריים';
+      } else if (hour >= 16.5 && hour < 22) {
+        return 'ארוחת ערב';
+      } else {
+        return 'נשנוש / ביניים';
+      }
+    }
+
+    function initCurrentMeal() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const currentHourDecimal = hours + (minutes / 60);
+
+      const detectedType = getAutoMealTypeByHour(currentHourDecimal);
+      const timeStr = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+      const dateStr = now.toISOString().split('T')[0];
+
+      appState.currentMeal = {
+        type: detectedType,
+        date: dateStr,
+        time: timeStr,
+        items: []
+      };
+
+      document.getElementById('meal-time-input').value = timeStr;
+      updateMealTypePillsUI(detectedType);
+    }
+
+    function updateMealTypePillsUI(activeType) {
+      const buttons = document.querySelectorAll('#meal-type-selector .meal-type-btn');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('data-type') === activeType) {
+          btn.className = 'meal-type-btn px-2 py-1 text-xs font-bold rounded-lg transition-all shadow-xs bg-emerald-600 text-white shrink-0';
+        } else {
+          btn.className = 'meal-type-btn px-2 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0';
+        }
+      });
+    }
+
+    // ==========================================
+    // 4. RENDERING FOOD BUTTONS (COMPACT & INTUITIVE)
+    // ==========================================
+    function renderFoodButtons() {
+      const grid = document.getElementById('food-buttons-grid');
+      const searchEmpty = document.getElementById('food-search-empty');
+      if (!grid) return;
+
+      let filtered = [...appState.foods];
+
+      if (appState.activeCategory !== 'all') {
+        if (appState.activeCategory === 'אישי') {
+          filtered = filtered.filter(f => f.isCustom);
+        } else {
+          filtered = filtered.filter(f => f.category === appState.activeCategory);
+        }
+      }
+
+      if (appState.searchQuery.trim() !== '') {
+        const q = appState.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(f => f.name.toLowerCase().includes(q) || f.portion.toLowerCase().includes(q));
+      }
+
+      filtered.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        searchEmpty.classList.remove('hidden');
+        return;
+      }
+      searchEmpty.classList.add('hidden');
+
+      let html = '';
+      filtered.forEach(food => {
+        const inTray = appState.currentMeal.items.find(item => item.foodId === food.id);
+        const count = inTray ? inTray.quantity : 0;
+        const isSelected = count > 0;
+
+        html += `
+          <div data-id="${food.id}" class="food-card group relative bg-white rounded-xl sm:rounded-2xl border ${isSelected ? 'border-emerald-500 ring-2 ring-emerald-400/30 bg-emerald-50/25 shadow-md' : 'border-slate-200/90 hover:border-slate-300 shadow-2xs hover:shadow-xs'} p-2 sm:p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer select-none active:scale-95 text-right min-h-[78px] sm:min-h-[88px]">
+            
+            <!-- In-Tray Quantity Badge -->
+            ${count > 0 ? `
+              <div class="absolute -top-1.5 -left-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow-xs pulse-badge z-10 border border-white">
+                x${count}
+              </div>
+            ` : ''}
+
+            <!-- Top Row: Distinct Emoji Icon + Star Count -->
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xl sm:text-2xl leading-none">${food.icon || '🍽️'}</span>
+              ${food.usageCount > 0 ? `
+                <span class="text-[9px] text-slate-400 font-medium">⭐${food.usageCount}</span>
+              ` : '<span class="text-[9px] text-slate-300"></span>'}
+            </div>
+
+            <!-- Food Name (Clean, Bold, Glanceable) -->
+            <div class="mb-1 flex-1">
+              <h4 class="text-[11px] sm:text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors leading-snug line-clamp-2">
+                ${escapeHtml(food.name)}
+              </h4>
+            </div>
+
+            <!-- Compact Macro Badges (Calories & Protein) -->
+            <div class="pt-1 border-t border-slate-100 flex items-center justify-between text-[10px]">
+              <span class="font-extrabold text-amber-700 bg-amber-50 px-1 py-0.5 rounded leading-none">
+                ${food.calories}<span class="text-[8px] font-normal">קק״ל</span>
+              </span>
+              <span class="font-bold text-blue-700 bg-blue-50 px-1 py-0.5 rounded leading-none">
+                ${food.protein}g
+              </span>
+            </div>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = html;
+
+      grid.querySelectorAll('.food-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const foodId = card.getAttribute('data-id');
+          addFoodToCurrentMeal(foodId);
+        });
+      });
+    }
+
+    // ==========================================
+    // 5. CURRENT MEAL BUILDER INTERACTIONS
+    // ==========================================
+    function addFoodToCurrentMeal(foodId) {
+      const existing = appState.currentMeal.items.find(i => i.foodId === foodId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        appState.currentMeal.items.push({
+          foodId: foodId,
+          quantity: 1
+        });
+      }
+
+      renderAllTrayViews();
+      renderFoodButtons();
+    }
+
+    function removeFoodFromCurrentMeal(foodId, removeAll = false) {
+      const idx = appState.currentMeal.items.findIndex(i => i.foodId === foodId);
+      if (idx !== -1) {
+        if (removeAll || appState.currentMeal.items[idx].quantity <= 1) {
+          appState.currentMeal.items.splice(idx, 1);
+        } else {
+          appState.currentMeal.items[idx].quantity -= 1;
+        }
+      }
+
+      renderAllTrayViews();
+      renderFoodButtons();
+    }
+
+    function clearCurrentMealTray() {
+      appState.currentMeal.items = [];
+      renderAllTrayViews();
+      renderFoodButtons();
+      document.getElementById('mobile-meal-drawer').classList.add('hidden');
+      showToast('סל הארוחה נוקה', 'info');
+    }
+
+    function calculateCurrentMealTotals() {
+      let totalCals = 0;
+      let totalProtein = 0;
+      let totalCarbs = 0;
+      let totalFat = 0;
+      let totalCount = 0;
+
+      appState.currentMeal.items.forEach(item => {
+        const food = appState.foods.find(f => f.id === item.foodId);
+        if (!food) return;
+
+        totalCount += item.quantity;
+        totalCals += Math.round(food.calories * item.quantity);
+        totalProtein += food.protein * item.quantity;
+        totalCarbs += food.carbs * item.quantity;
+        totalFat += food.fat * item.quantity;
+      });
+
+      return {
+        totalCals,
+        totalProtein: parseFloat(totalProtein.toFixed(1)),
+        totalCarbs: parseFloat(totalCarbs.toFixed(1)),
+        totalFat: parseFloat(totalFat.toFixed(1)),
+        totalCount
+      };
+    }
+
+    function renderAllTrayViews() {
+      const totals = calculateCurrentMealTotals();
+      const hasItems = appState.currentMeal.items.length > 0;
+
+      // 1. Mobile Floating Dock
+      const mobileDock = document.getElementById('mobile-floating-dock');
+      if (hasItems) {
+        mobileDock.classList.remove('translate-y-32', 'opacity-0', 'pointer-events-none');
+        document.getElementById('mobile-dock-count').textContent = totals.totalCount;
+        document.getElementById('mobile-dock-cals').textContent = totals.totalCals;
+        document.getElementById('mobile-dock-protein').textContent = totals.totalProtein + 'g';
+      } else {
+        mobileDock.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none');
+      }
+
+      // 2. Mobile Drawer Content
+      renderDrawerList(totals);
+
+      // 3. Desktop Tray Content
+      renderDesktopTray(totals, hasItems);
+    }
+
+    function renderDrawerList(totals) {
+      const listContainer = document.getElementById('mobile-drawer-items-list');
+      if (!listContainer) return;
+
+      document.getElementById('drawer-total-cals').textContent = totals.totalCals;
+      document.getElementById('drawer-total-protein').textContent = totals.totalProtein;
+      document.getElementById('drawer-total-carbs').textContent = totals.totalCarbs;
+      document.getElementById('drawer-total-fat').textContent = totals.totalFat;
+
+      if (appState.currentMeal.items.length === 0) {
+        listContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">הסל ריק</div>';
+        return;
+      }
+
+      let html = '';
+      appState.currentMeal.items.forEach(item => {
+        const food = appState.foods.find(f => f.id === item.foodId);
+        if (!food) return;
+
+        const itemCals = Math.round(food.calories * item.quantity);
+        const itemProtein = (food.protein * item.quantity).toFixed(1);
+
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+              <span class="text-lg shrink-0">${food.icon || '🍽️'}</span>
+              <div class="truncate">
+                <div class="text-xs font-bold text-slate-900 truncate">${escapeHtml(food.name)}</div>
+                <div class="text-[10px] text-slate-500">${itemCals} קק״ל • ${itemProtein}g חלבון</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0 ml-1">
+              <button data-action="dec" data-id="${food.id}" class="tray-action-btn w-6 h-6 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">-</button>
+              <span class="text-xs font-extrabold text-slate-800 w-5 text-center">${item.quantity}</span>
+              <button data-action="inc" data-id="${food.id}" class="tray-action-btn w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">+</button>
+              <button data-action="del" data-id="${food.id}" class="tray-action-btn p-1 text-slate-400 hover:text-rose-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      listContainer.innerHTML = html;
+
+      attachTrayActionListeners(listContainer);
+    }
+
+    function renderDesktopTray(totals, hasItems) {
+      const emptyState = document.getElementById('selected-items-empty');
+      const listState = document.getElementById('selected-items-list');
+      const commitBtn = document.getElementById('btn-commit-meal');
+
+      if (!hasItems) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (listState) listState.classList.add('hidden');
+        if (commitBtn) commitBtn.disabled = true;
+
+        document.getElementById('tray-total-cals').textContent = '0';
+        document.getElementById('tray-total-protein').textContent = '0';
+        document.getElementById('tray-total-carbs').textContent = '0';
+        document.getElementById('tray-total-fat').textContent = '0';
+        return;
+      }
+
+      if (emptyState) emptyState.classList.add('hidden');
+      if (listState) listState.classList.remove('hidden');
+      if (commitBtn) commitBtn.disabled = false;
+
+      document.getElementById('tray-total-cals').textContent = totals.totalCals;
+      document.getElementById('tray-total-protein').textContent = totals.totalProtein;
+      document.getElementById('tray-total-carbs').textContent = totals.totalCarbs;
+      document.getElementById('tray-total-fat').textContent = totals.totalFat;
+
+      let html = '';
+      appState.currentMeal.items.forEach(item => {
+        const food = appState.foods.find(f => f.id === item.foodId);
+        if (!food) return;
+
+        const itemCals = Math.round(food.calories * item.quantity);
+        const itemProtein = (food.protein * item.quantity).toFixed(1);
+
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+              <span class="text-lg shrink-0">${food.icon || '🍽️'}</span>
+              <div class="truncate">
+                <div class="text-xs font-bold text-slate-900 truncate">${escapeHtml(food.name)}</div>
+                <div class="text-[10px] text-slate-500">${itemCals} קק״ל • ${itemProtein}g חלבון</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <button data-action="dec" data-id="${food.id}" class="tray-action-btn w-6 h-6 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">-</button>
+              <span class="text-xs font-extrabold text-slate-800 w-5 text-center">${item.quantity}</span>
+              <button data-action="inc" data-id="${food.id}" class="tray-action-btn w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">+</button>
+              <button data-action="del" data-id="${food.id}" class="tray-action-btn p-1 text-slate-400 hover:text-rose-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      listState.innerHTML = html;
+
+      attachTrayActionListeners(listState);
+    }
+
+    function attachTrayActionListeners(container) {
+      container.querySelectorAll('.tray-action-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+          if (action === 'inc') {
+            addFoodToCurrentMeal(id);
+          } else if (action === 'dec') {
+            removeFoodFromCurrentMeal(id, false);
+          } else if (action === 'del') {
+            removeFoodFromCurrentMeal(id, true);
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // 6. COMMIT MEAL ("הוסף ארוחה")
+    // ==========================================
+    function commitCurrentMeal() {
+      if (appState.currentMeal.items.length === 0) {
+        showToast('יש לבחור לפחות פריט אחד לארוחה', 'warning');
+        return;
+      }
+
+      const totals = calculateCurrentMealTotals();
+
+      appState.currentMeal.items.forEach(item => {
+        const food = appState.foods.find(f => f.id === item.foodId);
+        if (food) {
+          food.usageCount = (food.usageCount || 0) + item.quantity;
+        }
+      });
+
+      const mealTime = document.getElementById('meal-time-input').value || '12:00';
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const newMeal = {
+        id: 'meal_' + Date.now(),
+        type: appState.currentMeal.type,
+        date: todayStr,
+        time: mealTime,
+        items: JSON.parse(JSON.stringify(appState.currentMeal.items)),
+        totalCalories: totals.totalCals,
+        totalProtein: totals.totalProtein,
+        totalCarbs: totals.totalCarbs,
+        totalFat: totals.totalFat
+      };
+
+      appState.mealsHistory.unshift(newMeal);
+      saveStateToStorage();
+
+      document.getElementById('mobile-meal-drawer').classList.add('hidden');
+
+      showMealSummaryModal(newMeal);
+
+      initCurrentMeal();
+      renderAllTrayViews();
+
+      renderFoodButtons();
+      updateMiniTodaySnapshot();
+      if (appState.currentTab === 'log') renderDailyLog();
+      if (appState.currentTab === 'analytics') renderAnalyticsCharts();
+    }
+
+    function showMealSummaryModal(meal) {
+      document.getElementById('modal-summary-subtitle').textContent = `${meal.type} • שעה ${meal.time}`;
+      document.getElementById('modal-summary-cals').textContent = meal.totalCalories;
+      document.getElementById('modal-summary-protein').textContent = meal.totalProtein;
+      document.getElementById('modal-summary-carbs').textContent = meal.totalCarbs;
+      document.getElementById('modal-summary-fat').textContent = meal.totalFat;
+
+      const itemsContainer = document.getElementById('modal-summary-items');
+      let itemsHtml = '';
+      meal.items.forEach(item => {
+        const food = appState.foods.find(f => f.id === item.foodId);
+        if (food) {
+          itemsHtml += `
+            <div class="flex items-center justify-between py-1 border-b border-slate-100 last:border-0 text-xs">
+              <span class="text-slate-800 font-medium">${food.icon || '🍽️'} ${escapeHtml(food.name)} x ${item.quantity}</span>
+              <span class="font-bold text-amber-700">${Math.round(food.calories * item.quantity)} קק״ל (${(food.protein * item.quantity).toFixed(1)}g חלבון)</span>
+            </div>
+          `;
+        }
+      });
+      itemsContainer.innerHTML = itemsHtml;
+
+      const todayTotals = getDayTotals(meal.date);
+      const goalCals = appState.settings.goalCalories || 2000;
+      const pct = Math.min(100, Math.round((todayTotals.calories / goalCals) * 100));
+
+      document.getElementById('modal-summary-daily-status').textContent = `${todayTotals.calories} / ${goalCals} קק״ל (${pct}%)`;
+      document.getElementById('modal-summary-progress-bar').style.width = pct + '%';
+
+      document.getElementById('modal-meal-summary').classList.remove('hidden');
+    }
+
+    // ==========================================
+    // 7. ADD NEW CUSTOM FOOD BUTTON & SMART DICT
+    // ==========================================
+    function setupAddFoodForm() {
+      const nameInput = document.getElementById('food-input-name');
+      const btnAiAnalyze = document.getElementById('btn-trigger-ai-analysis');
+      const aiLoading = document.getElementById('ai-analysis-loading');
+      const aiResultCard = document.getElementById('ai-analysis-result');
+      const aiExplanation = document.getElementById('ai-result-explanation');
+      const btnReanalyze = document.getElementById('btn-ai-reanalyze');
+
+      const smartAlert = document.getElementById('smart-recognition-alert');
+      const smartText = document.getElementById('smart-recognition-text');
+      const btnApplySmart = document.getElementById('btn-apply-smart-values');
+
+      let currentAiResult = null;
+      let debounceTimer = null;
+
+      async function executeAiAnalysis(isManual = false) {
+        const val = nameInput.value.trim();
+        if (!val || val.length < 2) {
+          if (isManual) showToast('נא להקליד מאכל וכמות (למשל: כפית טחינה, 100 גרם פסטה)', 'warning');
+          aiResultCard.classList.add('hidden');
+          return;
+        }
+
+        aiLoading.classList.remove('hidden');
+        aiResultCard.classList.add('hidden');
+
+        let result = null;
+
+        // 1. Try cloud AI if key is present
+        if (appState.settings && appState.settings.geminiApiKey) {
+          result = await queryCloudAiNutrition(val, appState.settings.geminiApiKey);
+        }
+
+        // 2. Local AI nutrition engine (ultra fast, offline & accurate)
+        if (!result) {
+          // slight realistic delay on manual tap for feedback
+          if (isManual) await new Promise(r => setTimeout(r, 200));
+          result = analyzeHebrewFoodInput(val);
+        }
+
+        aiLoading.classList.add('hidden');
+
+        if (result && result.success) {
+          currentAiResult = result;
+
+          // Fill inputs
+          document.getElementById('food-input-category').value = result.category;
+          document.getElementById('food-input-icon').value = result.icon;
+          document.getElementById('food-input-cals').value = result.calories;
+          document.getElementById('food-input-protein').value = result.protein;
+          document.getElementById('food-input-carbs').value = result.carbs;
+          document.getElementById('food-input-fat').value = result.fat;
+
+          // Visual feedback on macro inputs
+          ['food-input-cals', 'food-input-protein', 'food-input-carbs', 'food-input-fat'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.classList.add('ring-2', 'ring-emerald-400');
+              setTimeout(() => el.classList.remove('ring-2', 'ring-emerald-400'), 1200);
+            }
+          });
+
+          aiExplanation.textContent = result.explanation;
+          aiResultCard.classList.remove('hidden');
+
+          if (smartText) smartText.textContent = result.explanation;
+          showToast(`✨ ה-AI זיהה: ${result.calories} קק״ל, ${result.protein}g חלבון`, 'success');
+        } else {
+          if (isManual) {
+            showToast('ה-AI לא זיהה בוודאות את המאכל. ניתן להזין את הערכים ידנית.', 'info');
+          }
+        }
+      }
+
+      // Manual trigger button
+      if (btnAiAnalyze) {
+        btnAiAnalyze.addEventListener('click', () => executeAiAnalysis(true));
+      }
+
+      if (btnReanalyze) {
+        btnReanalyze.addEventListener('click', () => executeAiAnalysis(true));
+      }
+
+      // Realtime auto-analysis on typing
+      nameInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const val = nameInput.value.trim();
+        if (val.length >= 3) {
+          debounceTimer = setTimeout(() => {
+            executeAiAnalysis(false);
+          }, 450);
+        } else {
+          aiResultCard.classList.add('hidden');
+        }
+      });
+
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          executeAiAnalysis(true);
+        }
+      });
+
+      // Backward compatibility buttons
+      if (btnApplySmart) {
+        btnApplySmart.addEventListener('click', () => executeAiAnalysis(true));
+      }
+
+      const form = document.getElementById('form-add-food');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('food-input-name').value.trim();
+        const category = document.getElementById('food-input-category').value;
+        const icon = document.getElementById('food-input-icon').value.trim() || '🍽️';
+        const calories = parseFloat(document.getElementById('food-input-cals').value) || 0;
+        const protein = parseFloat(document.getElementById('food-input-protein').value) || 0;
+        const carbs = parseFloat(document.getElementById('food-input-carbs').value) || 0;
+        const fat = parseFloat(document.getElementById('food-input-fat').value) || 0;
+
+        if (!name) return;
+
+        const newFood = {
+          id: 'custom_' + Date.now(),
+          name: name,
+          portion: 'כמות מותאמת',
+          calories: Math.round(calories),
+          protein: parseFloat(protein.toFixed(1)),
+          carbs: parseFloat(carbs.toFixed(1)),
+          fat: parseFloat(fat.toFixed(1)),
+          category: category,
+          icon: icon,
+          usageCount: 1,
+          isCustom: true
+        };
+
+        appState.foods.unshift(newFood);
+        saveStateToStorage();
+
+        document.getElementById('modal-add-food').classList.add('hidden');
+        form.reset();
+        smartAlert.classList.add('hidden');
+
+        renderFoodButtons();
+        showToast(`הכפתור "${newFood.name}" נוסף בהצלחה!`, 'success');
+      });
+    }
+
+    // ==========================================
+    // 8. DAILY LOG & EDITING/DELETING MEALS
+    // ==========================================
+    function setupDailyLogView() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      appState.selectedLogDate = todayStr;
+      document.getElementById('log-date-picker').value = todayStr;
+
+      document.getElementById('btn-prev-day').addEventListener('click', () => changeLogDate(-1));
+      document.getElementById('btn-next-day').addEventListener('click', () => changeLogDate(1));
+
+      document.getElementById('btn-jump-today').addEventListener('click', () => {
+        appState.selectedLogDate = new Date().toISOString().split('T')[0];
+        document.getElementById('log-date-picker').value = appState.selectedLogDate;
+        renderDailyLog();
+      });
+
+      document.getElementById('log-date-picker').addEventListener('change', (e) => {
+        if (e.target.value) {
+          appState.selectedLogDate = e.target.value;
+          renderDailyLog();
+        }
+      });
+
+      document.getElementById('btn-goto-track-from-log').addEventListener('click', () => switchTab('track'));
+
+      setupMealEditor();
+    }
+
+    function changeLogDate(offsetDays) {
+      const parts = appState.selectedLogDate.split('-');
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      d.setDate(d.getDate() + offsetDays);
+
+      appState.selectedLogDate = d.toISOString().split('T')[0];
+      document.getElementById('log-date-picker').value = appState.selectedLogDate;
+      renderDailyLog();
+    }
+
+    function getHebrewFormattedDate(dateStr) {
+      const daysHeb = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'יום שבת'];
+      const monthsHeb = ['בינואר', 'בפברואר', 'במרץ', 'באפריל', 'במאי', 'ביוני', 'ביולי', 'באוגוסט', 'בספטמבר', 'באוקטובר', 'בנובמבר', 'בדצמבר'];
+
+      const parts = dateStr.split('-');
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+
+      return `${daysHeb[d.getDay()]}, ${d.getDate()} ${monthsHeb[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function renderDailyLog() {
+      const dateStr = appState.selectedLogDate;
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      document.getElementById('log-date-display').textContent = getHebrewFormattedDate(dateStr);
+      const relativeSpan = document.getElementById('log-date-relative');
+      if (dateStr === todayStr) {
+        relativeSpan.textContent = 'היום';
+        relativeSpan.className = 'text-[11px] text-emerald-600 font-semibold';
+      } else {
+        relativeSpan.textContent = dateStr;
+        relativeSpan.className = 'text-[11px] text-slate-400 font-normal';
+      }
+
+      const meals = appState.mealsHistory.filter(m => m.date === dateStr);
+      document.getElementById('log-meals-count').textContent = `${meals.length} ארוחות`;
+
+      let totalCals = 0;
+      let totalProtein = 0;
+      let totalCarbs = 0;
+      let totalFat = 0;
+
+      meals.forEach(m => {
+        totalCals += m.totalCalories;
+        totalProtein += m.totalProtein;
+        totalCarbs += m.totalCarbs;
+        totalFat += m.totalFat;
+      });
+
+      const goalCals = appState.settings.goalCalories || 2000;
+      const goalProtein = appState.settings.goalProtein || 140;
+
+      document.getElementById('log-total-cals').textContent = totalCals;
+      document.getElementById('log-goal-cals').textContent = goalCals;
+      document.getElementById('log-bar-cals').style.width = Math.min(100, Math.round((totalCals / goalCals) * 100)) + '%';
+
+      document.getElementById('log-total-protein').textContent = totalProtein.toFixed(1);
+      document.getElementById('log-goal-protein').textContent = goalProtein;
+      document.getElementById('log-bar-protein').style.width = Math.min(100, Math.round((totalProtein / goalProtein) * 100)) + '%';
+
+      document.getElementById('log-total-carbs').textContent = totalCarbs.toFixed(1);
+      document.getElementById('log-total-fat').textContent = totalFat.toFixed(1);
+
+      if (totalCals > 0) {
+        const carbsCals = totalCarbs * 4;
+        const fatCals = totalFat * 9;
+        document.getElementById('log-carbs-cals-pct').textContent = `${Math.round((carbsCals / totalCals) * 100)}% מהקלוריות`;
+        document.getElementById('log-fat-cals-pct').textContent = `${Math.round((fatCals / totalCals) * 100)}% מהקלוריות`;
+      } else {
+        document.getElementById('log-carbs-cals-pct').textContent = '0% מהקלוריות';
+        document.getElementById('log-fat-cals-pct').textContent = '0% מהקלוריות';
+      }
+
+      const container = document.getElementById('log-meals-container');
+      const emptyState = document.getElementById('log-meals-empty');
+
+      if (meals.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      let html = '';
+      meals.forEach(meal => {
+        let itemsHtml = '';
+        meal.items.forEach(item => {
+          const food = appState.foods.find(f => f.id === item.foodId);
+          const name = food ? food.name : 'פריט';
+          const icon = food ? (food.icon || '🍽️') : '🍽️';
+          itemsHtml += `
+            <span class="inline-flex items-center gap-1 bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded-lg text-[11px]">
+              <span>${icon}</span>
+              <span class="font-medium">${escapeHtml(name)}</span>
+              <span class="font-bold text-emerald-700">x${item.quantity}</span>
+            </span>
+          `;
+        });
+
+        html += `
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-3.5 shadow-2xs hover:shadow-xs transition-shadow">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center gap-1.5">
+                <span class="text-base">🍽️</span>
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900">${meal.type}</h4>
+                <span class="text-[10px] text-slate-400">🕒 ${meal.time}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button data-action="edit" data-id="${meal.id}" class="meal-card-action px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                  ✏️ ערוך
+                </button>
+                <button data-action="duplicate" data-id="${meal.id}" class="meal-card-action px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                  📋 שכפל
+                </button>
+                <button data-action="delete" data-id="${meal.id}" class="meal-card-action p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors" title="מחק">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="py-2.5 flex flex-wrap gap-1">
+              ${itemsHtml}
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+              <div class="flex items-center gap-2.5">
+                <span class="font-bold text-amber-700">${meal.totalCalories} קק״ל</span>
+                <span class="text-blue-700 font-semibold">${meal.totalProtein}g חלבון</span>
+                <span class="text-emerald-700">${meal.totalCarbs}g פחמימות</span>
+                <span class="text-rose-700">${meal.totalFat}g שומן</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      container.querySelectorAll('.meal-card-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+
+          if (action === 'delete') {
+            deleteMealById(id);
+          } else if (action === 'edit') {
+            openEditMealModal(id);
+          } else if (action === 'duplicate') {
+            const meal = appState.mealsHistory.find(m => m.id === id);
+            if (meal) {
+              meal.items.forEach(item => {
+                for (let k = 0; k < item.quantity; k++) {
+                  addFoodToCurrentMeal(item.foodId);
+                }
+              });
+              switchTab('track');
+              showToast('מרכיבי הארוחה שוכפלו לסל!', 'success');
+            }
+          }
+        });
+      });
+    }
+
+    function deleteMealById(id) {
+      const idx = appState.mealsHistory.findIndex(m => m.id === id);
+      if (idx !== -1) {
+        appState.mealsHistory.splice(idx, 1);
+        saveStateToStorage();
+        renderDailyLog();
+        updateMiniTodaySnapshot();
+        if (appState.currentTab === 'analytics') renderAnalyticsCharts();
+        showToast('הארוחה נמחקה בהצלחה', 'info');
+      }
+    }
+
+    // ==========================================
+    // 8.1 EDIT MEAL MODAL LOGIC
+    // ==========================================
+    function setupMealEditor() {
+      document.getElementById('btn-close-edit-meal-modal').addEventListener('click', () => {
+        document.getElementById('modal-edit-meal').classList.add('hidden');
+      });
+      document.getElementById('btn-cancel-edit-meal').addEventListener('click', () => {
+        document.getElementById('modal-edit-meal').classList.add('hidden');
+      });
+
+      document.getElementById('btn-edit-meal-delete').addEventListener('click', () => {
+        const id = document.getElementById('edit-meal-id').value;
+        if (id) {
+          deleteMealById(id);
+          document.getElementById('modal-edit-meal').classList.add('hidden');
+        }
+      });
+
+      document.getElementById('btn-edit-meal-add-item').addEventListener('click', () => {
+        const select = document.getElementById('edit-meal-add-food-select');
+        const foodId = select.value;
+        if (!foodId || !appState.editingMeal) return;
+
+        const existing = appState.editingMeal.items.find(i => i.foodId === foodId);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          appState.editingMeal.items.push({ foodId: foodId, quantity: 1 });
+        }
+
+        renderEditMealItems();
+      });
+
+      document.getElementById('form-edit-meal').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!appState.editingMeal) return;
+
+        if (appState.editingMeal.items.length === 0) {
+          showToast('לא ניתן לשמור ארוחה ללא פריטים', 'warning');
+          return;
+        }
+
+        const mealId = document.getElementById('edit-meal-id').value;
+        const targetMeal = appState.mealsHistory.find(m => m.id === mealId);
+        if (!targetMeal) return;
+
+        const type = document.getElementById('edit-meal-type').value;
+        const date = document.getElementById('edit-meal-date').value;
+        const time = document.getElementById('edit-meal-time').value;
+
+        let totalCals = 0;
+        let totalProtein = 0;
+        let totalCarbs = 0;
+        let totalFat = 0;
+
+        appState.editingMeal.items.forEach(item => {
+          const food = appState.foods.find(f => f.id === item.foodId);
+          if (food) {
+            totalCals += Math.round(food.calories * item.quantity);
+            totalProtein += food.protein * item.quantity;
+            totalCarbs += food.carbs * item.quantity;
+            totalFat += food.fat * item.quantity;
+          }
+        });
+
+        targetMeal.type = type;
+        targetMeal.date = date;
+        targetMeal.time = time;
+        targetMeal.items = JSON.parse(JSON.stringify(appState.editingMeal.items));
+        targetMeal.totalCalories = totalCals;
+        targetMeal.totalProtein = parseFloat(totalProtein.toFixed(1));
+        targetMeal.totalCarbs = parseFloat(totalCarbs.toFixed(1));
+        targetMeal.totalFat = parseFloat(totalFat.toFixed(1));
+
+        saveStateToStorage();
+        document.getElementById('modal-edit-meal').classList.add('hidden');
+
+        renderDailyLog();
+        updateMiniTodaySnapshot();
+        if (appState.currentTab === 'analytics') renderAnalyticsCharts();
+
+        showToast('השינויים בארוחה נשמרו בהצלחה!', 'success');
+      });
+    }
+
+    function openEditMealModal(mealId) {
+      const meal = appState.mealsHistory.find(m => m.id === mealId);
+      if (!meal) return;
+
+      appState.editingMeal = JSON.parse(JSON.stringify(meal));
+
+      document.getElementById('edit-meal-id').value = meal.id;
+      document.getElementById('edit-meal-type').value = meal.type;
+      document.getElementById('edit-meal-date').value = meal.date;
+      document.getElementById('edit-meal-time').value = meal.time;
+
+      const foodSelect = document.getElementById('edit-meal-add-food-select');
+      let optionsHtml = '';
+      appState.foods.forEach(f => {
+        optionsHtml += `<option value="${f.id}">${f.icon || '🍽️'} ${escapeHtml(f.name)} (${f.calories} קק״ל)</option>`;
+      });
+      foodSelect.innerHTML = optionsHtml;
+
+      renderEditMealItems();
+      document.getElementById('modal-edit-meal').classList.remove('hidden');
+    }
+
+    function renderEditMealItems() {
+      const container = document.getElementById('edit-meal-items-container');
+      if (!container || !appState.editingMeal) return;
+
+      let totalCals = 0;
+      let totalProtein = 0;
+      let totalCarbs = 0;
+      let totalFat = 0;
+
+      let html = '';
+      appState.editingMeal.items.forEach((item, index) => {
+        const food = appState.foods.find(f => f.id === item.foodId);
+        if (!food) return;
+
+        const itemCals = Math.round(food.calories * item.quantity);
+        const itemProtein = (food.protein * item.quantity).toFixed(1);
+        const itemCarbs = (food.carbs * item.quantity).toFixed(1);
+        const itemFat = (food.fat * item.quantity).toFixed(1);
+
+        totalCals += itemCals;
+        totalProtein += parseFloat(itemProtein);
+        totalCarbs += parseFloat(itemCarbs);
+        totalFat += parseFloat(itemFat);
+
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+              <span class="text-base shrink-0">${food.icon || '🍽️'}</span>
+              <div class="truncate">
+                <div class="text-xs font-bold text-slate-900 truncate">${escapeHtml(food.name)}</div>
+                <div class="text-[10px] text-slate-500">${itemCals} קק״ל • ${itemProtein}g חלבון</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <button type="button" data-index="${index}" data-edit-action="dec" class="edit-item-btn w-6 h-6 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">-</button>
+              <span class="text-xs font-extrabold text-slate-800 w-5 text-center">${item.quantity}</span>
+              <button type="button" data-index="${index}" data-edit-action="inc" class="edit-item-btn w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">+</button>
+              <button type="button" data-index="${index}" data-edit-action="del" class="edit-item-btn p-1 text-slate-400 hover:text-rose-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      if (appState.editingMeal.items.length === 0) {
+        html = '<div class="text-center py-4 text-xs text-rose-500 font-medium">הארוחה ריקה מפריטים. הוסף פריט למטה</div>';
+      }
+
+      container.innerHTML = html;
+
+      document.getElementById('edit-total-cals').textContent = totalCals;
+      document.getElementById('edit-total-protein').textContent = totalProtein.toFixed(1);
+      document.getElementById('edit-total-carbs').textContent = totalCarbs.toFixed(1);
+      document.getElementById('edit-total-fat').textContent = totalFat.toFixed(1);
+
+      container.querySelectorAll('.edit-item-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-index'));
+          const action = btn.getAttribute('data-edit-action');
+
+          if (action === 'inc') {
+            appState.editingMeal.items[idx].quantity += 1;
+          } else if (action === 'dec') {
+            if (appState.editingMeal.items[idx].quantity > 1) {
+              appState.editingMeal.items[idx].quantity -= 1;
+            } else {
+              appState.editingMeal.items.splice(idx, 1);
+            }
+          } else if (action === 'del') {
+            appState.editingMeal.items.splice(idx, 1);
+          }
+
+          renderEditMealItems();
+        });
+      });
+    }
+
+    // ==========================================
+    // 9. CHARTS & ANALYTICS VIEW
+    // ==========================================
+    function setupAnalyticsView() {
+      const rangeBtns = document.querySelectorAll('#chart-range-selector .chart-range-btn');
+      rangeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          rangeBtns.forEach(b => {
+            b.className = 'chart-range-btn px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900';
+          });
+          btn.className = 'chart-range-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-slate-900 shadow-2xs';
+
+          appState.chartDaysRange = parseInt(btn.getAttribute('data-days')) || 7;
+          renderAnalyticsCharts();
+        });
+      });
+    }
+
+    function renderAnalyticsCharts() {
+      const daysCount = appState.chartDaysRange || 7;
+      const goalCals = appState.settings.goalCalories || 2000;
+      const goalProtein = appState.settings.goalProtein || 140;
+
+      document.getElementById('chart-cals-target-label').textContent = goalCals.toLocaleString();
+      document.getElementById('chart-protein-target-label').textContent = goalProtein;
+
+      const labels = [];
+      const calsData = [];
+      const proteinData = [];
+      const targetCalsLine = [];
+      const targetProteinLine = [];
+
+      let sumCals = 0;
+      let sumProtein = 0;
+      let targetMetDays = 0;
+      let totalMealsCount = 0;
+      let totalCarbsG = 0;
+      let totalFatG = 0;
+
+      const now = new Date();
+      for (let i = daysCount - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+
+        labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+
+        const totals = getDayTotals(dateStr);
+        calsData.push(totals.calories);
+        proteinData.push(parseFloat(totals.protein.toFixed(1)));
+        targetCalsLine.push(goalCals);
+        targetProteinLine.push(goalProtein);
+
+        sumCals += totals.calories;
+        sumProtein += totals.protein;
+        totalCarbsG += totals.carbs;
+        totalFatG += totals.fat;
+
+        if (totals.protein >= goalProtein && totals.protein > 0) targetMetDays++;
+
+        const dayMeals = appState.mealsHistory.filter(m => m.date === dateStr);
+        totalMealsCount += dayMeals.length;
+      }
+
+      document.getElementById('stat-avg-cals').textContent = Math.round(sumCals / daysCount).toLocaleString();
+      document.getElementById('stat-avg-protein').textContent = (sumProtein / daysCount).toFixed(1);
+      document.getElementById('stat-total-meals').textContent = totalMealsCount;
+      document.getElementById('stat-protein-compliance').textContent = Math.round((targetMetDays / daysCount) * 100) + '%';
+
+      // 1. Calories Chart
+      const ctxCals = document.getElementById('caloriesChart');
+      if (caloriesChartInstance) caloriesChartInstance.destroy();
+
+      caloriesChartInstance = new Chart(ctxCals, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'יעד קלוריות',
+              data: targetCalsLine,
+              borderColor: '#f59e0b',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              type: 'bar',
+              label: 'צריכה יומית (קק״ל)',
+              data: calsData,
+              backgroundColor: calsData.map(val => val > goalCals ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)'),
+              borderRadius: 6,
+              borderWidth: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              rtl: true,
+              labels: { font: { family: 'Rubik', size: 11 } }
+            },
+            tooltip: {
+              rtl: true,
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y} קק״ל`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { family: 'Rubik', size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: 'Rubik', size: 10 } }
+            }
+          }
+        }
+      });
+
+      // 2. Protein Chart
+      const ctxProtein = document.getElementById('proteinChart');
+      if (proteinChartInstance) proteinChartInstance.destroy();
+
+      proteinChartInstance = new Chart(ctxProtein, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'יעד חלבון',
+              data: targetProteinLine,
+              borderColor: '#3b82f6',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              type: 'bar',
+              label: 'חלבון יומי (גרם)',
+              data: proteinData,
+              backgroundColor: proteinData.map(val => val >= goalProtein && val > 0 ? 'rgba(59, 130, 246, 0.85)' : 'rgba(147, 197, 253, 0.8)'),
+              borderRadius: 6,
+              borderWidth: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              rtl: true,
+              labels: { font: { family: 'Rubik', size: 11 } }
+            },
+            tooltip: {
+              rtl: true,
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y} גרם`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { family: 'Rubik', size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: 'Rubik', size: 10 } }
+            }
+          }
+        }
+      });
+
+      // 3. Macro Pie Chart
+      const ctxPie = document.getElementById('macroPieChart');
+      if (macroPieChartInstance) macroPieChartInstance.destroy();
+
+      const proteinCals = sumProtein * 4;
+      const carbsCals = totalCarbsG * 4;
+      const fatCals = totalFatG * 9;
+      const hasAnyMacro = (proteinCals + carbsCals + fatCals) > 0;
+
+      macroPieChartInstance = new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+          labels: hasAnyMacro ? ['חלבון', 'פחמימות', 'שומן'] : ['אין נתונים עדיין'],
+          datasets: [
+            {
+              data: hasAnyMacro ? [Math.round(proteinCals), Math.round(carbsCals), Math.round(fatCals)] : [1],
+              backgroundColor: hasAnyMacro ? ['#3b82f6', '#10b981', '#f43f5e'] : ['#e2e8f0'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              rtl: true,
+              labels: { font: { family: 'Rubik', size: 11 } }
+            },
+            tooltip: {
+              rtl: true,
+              callbacks: {
+                label: function(context) {
+                  if (!hasAnyMacro) return 'אין ארוחות בתקופה זו';
+                  const val = context.parsed;
+                  const total = proteinCals + carbsCals + fatCals;
+                  const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                  return `${context.label}: ${val} קק״ל (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateMiniTodaySnapshot() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayTotals = getDayTotals(todayStr);
+      const goalCals = appState.settings.goalCalories || 2000;
+      const goalProtein = appState.settings.goalProtein || 140;
+
+      document.getElementById('mini-today-cals').textContent = todayTotals.calories;
+      document.getElementById('mini-goal-cals').textContent = goalCals.toLocaleString();
+      const calsPct = Math.min(100, Math.round((todayTotals.calories / goalCals) * 100));
+      document.getElementById('mini-cals-pct').textContent = calsPct + '%';
+      document.getElementById('mini-cals-bar').style.width = calsPct + '%';
+
+      document.getElementById('mini-today-protein').textContent = todayTotals.protein.toFixed(1);
+      document.getElementById('mini-goal-protein').textContent = goalProtein;
+      const proteinPct = Math.min(100, Math.round((todayTotals.protein / goalProtein) * 100));
+      document.getElementById('mini-protein-pct').textContent = proteinPct + '%';
+      document.getElementById('mini-protein-bar').style.width = proteinPct + '%';
+    }
+
+    function getDayTotals(dateStr) {
+      const meals = appState.mealsHistory.filter(m => m.date === dateStr);
+      let c = 0, p = 0, cb = 0, f = 0;
+      meals.forEach(m => {
+        c += m.totalCalories;
+        p += m.totalProtein;
+        cb += m.totalCarbs;
+        f += m.totalFat;
+      });
+      return { calories: c, protein: p, carbs: cb, fat: f };
+    }
+
+    // ==========================================
+    // 10. EXPORT & BACKUP FUNCTIONALITY
+    // ==========================================
+    function setupExportAndSettings() {
+      document.getElementById('btn-export-csv').addEventListener('click', () => {
+        if (appState.mealsHistory.length === 0) {
+          showToast('אין ארוחות לייצוא', 'warning');
+          return;
+        }
+
+        let csv = '\uFEFF';
+        csv += 'מזהה,תאריך,שעה,סוג ארוחה,פירוט מאכלים,קלוריות,חלבון (גרם),פחמימות (גרם),שומן (גרם)\r\n';
+
+        appState.mealsHistory.forEach(meal => {
+          const itemsDesc = meal.items.map(item => {
+            const food = appState.foods.find(f => f.id === item.foodId);
+            return `${food ? food.name : 'פריט'} (x${item.quantity})`;
+          }).join(' | ');
+
+          const row = [
+            `"${meal.id}"`,
+            `"${meal.date}"`,
+            `"${meal.time}"`,
+            `"${meal.type}"`,
+            `"${itemsDesc.replace(/"/g, '""')}"`,
+            meal.totalCalories,
+            meal.totalProtein,
+            meal.totalCarbs,
+            meal.totalFat
+          ];
+
+          csv += row.join(',') + '\r\n';
+        });
+
+        downloadFile(csv, `fastbite_meals_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+        showToast('קובץ האקסל (CSV) הורד בהצלחה!', 'success');
+      });
+
+      document.getElementById('btn-export-json').addEventListener('click', () => {
+        const backupData = {
+          exportDate: new Date().toISOString(),
+          version: '1.0',
+          foods: appState.foods,
+          mealsHistory: appState.mealsHistory,
+          settings: appState.settings
+        };
+
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        downloadFile(jsonStr, `fastbite_backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+        showToast('קובץ הגיבוי (JSON) הורד בהצלחה!', 'success');
+      });
+
+      document.getElementById('input-import-file').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const data = JSON.parse(evt.target.result);
+            if (data.foods && Array.isArray(data.foods)) appState.foods = data.foods;
+            if (data.mealsHistory && Array.isArray(data.mealsHistory)) appState.mealsHistory = data.mealsHistory;
+            if (data.settings) appState.settings = data.settings;
+
+            saveStateToStorage();
+            renderFoodButtons();
+            renderAllTrayViews();
+            updateMiniTodaySnapshot();
+            document.getElementById('modal-export').classList.add('hidden');
+            showToast('הנתונים שוחזרו בהצלחה!', 'success');
+          } catch (err) {
+            showToast('שגיאה בקריאת קובץ הגיבוי', 'error');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      // Settings Save
+      document.getElementById('form-settings').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const goalC = parseInt(document.getElementById('setting-goal-cals').value) || 2000;
+        const goalP = parseInt(document.getElementById('setting-goal-protein').value) || 140;
+        const geminiKey = (document.getElementById('setting-gemini-key').value || '').trim();
+
+        appState.settings.goalCalories = goalC;
+        appState.settings.goalProtein = goalP;
+        appState.settings.geminiApiKey = geminiKey;
+        saveStateToStorage();
+
+        document.getElementById('modal-settings').classList.add('hidden');
+        updateMiniTodaySnapshot();
+        if (appState.currentTab === 'analytics') renderAnalyticsCharts();
+        if (appState.currentTab === 'log') renderDailyLog();
+        showToast('היעדים עודכנו בהצלחה!', 'success');
+      });
+
+      // Clear All Meals History
+      document.getElementById('btn-clear-all-history').addEventListener('click', () => {
+        appState.mealsHistory = [];
+        saveStateToStorage();
+
+        renderDailyLog();
+        renderAnalyticsCharts();
+        updateMiniTodaySnapshot();
+        document.getElementById('modal-settings').classList.add('hidden');
+        showToast('כל היסטוריית הארוחות נוקתה', 'info');
+      });
+
+      // Full reset demo/defaults
+      document.getElementById('btn-reset-demo-data').addEventListener('click', () => {
+        appState.foods = DEFAULT_FOODS.map(f => ({ ...f, usageCount: 0 }));
+        appState.mealsHistory = [];
+        appState.settings = { goalCalories: 2000, goalProtein: 140 };
+        saveStateToStorage();
+
+        renderFoodButtons();
+        renderAllTrayViews();
+        updateMiniTodaySnapshot();
+        renderDailyLog();
+        renderAnalyticsCharts();
+        document.getElementById('modal-settings').classList.add('hidden');
+        showToast('הנתונים אופסו לברירת המחדל', 'info');
+      });
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 200);
+    }
+
+    // ==========================================
+    // 11. NAVIGATION & MODAL CONTROLS
+    // ==========================================
+    function switchTab(tab) {
+      appState.currentTab = tab;
+
+      const tabs = ['track', 'log', 'analytics'];
+      tabs.forEach(t => {
+        const viewEl = document.getElementById(`view-${t}`);
+        const desktopBtn = document.getElementById(`nav-tab-${t}`);
+        const mobileBtn = document.getElementById(`nav-tab-${t}-mobile`);
+
+        if (t === tab) {
+          viewEl.classList.remove('hidden');
+          if (desktopBtn) {
+            desktopBtn.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs bg-white text-emerald-700';
+          }
+          if (mobileBtn) {
+            mobileBtn.className = 'mobile-nav-btn flex flex-col items-center justify-center h-full text-emerald-600 font-bold';
+          }
+        } else {
+          viewEl.classList.add('hidden');
+          if (desktopBtn) {
+            desktopBtn.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900';
+          }
+          if (mobileBtn) {
+            mobileBtn.className = 'mobile-nav-btn flex flex-col items-center justify-center h-full text-slate-400 font-medium hover:text-slate-700';
+          }
+        }
+      });
+
+      if (tab === 'log') {
+        renderDailyLog();
+      } else if (tab === 'analytics') {
+        renderAnalyticsCharts();
+      } else if (tab === 'track') {
+        updateMiniTodaySnapshot();
+      }
+    }
+
+    function setupModalsAndTabs() {
+      // Desktop Nav Tabs
+      document.getElementById('nav-tab-track').addEventListener('click', () => switchTab('track'));
+      document.getElementById('nav-tab-log').addEventListener('click', () => switchTab('log'));
+      document.getElementById('nav-tab-analytics').addEventListener('click', () => switchTab('analytics'));
+
+      // Mobile Nav Tabs
+      document.getElementById('nav-tab-track-mobile').addEventListener('click', () => switchTab('track'));
+      document.getElementById('nav-tab-log-mobile').addEventListener('click', () => switchTab('log'));
+      document.getElementById('nav-tab-analytics-mobile').addEventListener('click', () => switchTab('analytics'));
+
+      // Mobile Floating Dock & Drawer controls
+      document.getElementById('btn-toggle-mobile-drawer').addEventListener('click', () => {
+        document.getElementById('mobile-meal-drawer').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-mobile-drawer').addEventListener('click', () => {
+        document.getElementById('mobile-meal-drawer').classList.add('hidden');
+      });
+      document.getElementById('btn-commit-meal-mobile').addEventListener('click', commitCurrentMeal);
+      document.getElementById('btn-commit-drawer-meal').addEventListener('click', commitCurrentMeal);
+      document.getElementById('btn-clear-tray-mobile').addEventListener('click', clearCurrentMealTray);
+
+      // Desktop commit & clear
+      document.getElementById('btn-commit-meal').addEventListener('click', commitCurrentMeal);
+      document.getElementById('btn-clear-tray').addEventListener('click', clearCurrentMealTray);
+
+      // Open Add Food modal
+      const openAddModal = () => {
+        document.getElementById('modal-add-food').classList.remove('hidden');
+        document.getElementById('food-input-name').focus();
+      };
+      document.getElementById('btn-open-add-food-header').addEventListener('click', openAddModal);
+      document.getElementById('btn-open-add-food-grid').addEventListener('click', openAddModal);
+      document.getElementById('btn-add-food-from-search').addEventListener('click', () => {
+        openAddModal();
+        document.getElementById('food-input-name').value = appState.searchQuery;
+      });
+
+      document.getElementById('btn-close-add-food-modal').addEventListener('click', () => {
+        document.getElementById('modal-add-food').classList.add('hidden');
+      });
+      document.getElementById('btn-cancel-add-food').addEventListener('click', () => {
+        document.getElementById('modal-add-food').classList.add('hidden');
+      });
+
+      // Export modal
+      document.getElementById('btn-open-export').addEventListener('click', () => {
+        document.getElementById('modal-export').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-export-modal').addEventListener('click', () => {
+        document.getElementById('modal-export').classList.add('hidden');
+      });
+
+      // Install guide modal
+      const installModal = document.getElementById('modal-install-guide');
+      const openInstallGuide = () => {
+        if (installModal) installModal.classList.remove('hidden');
+      };
+      const closeInstallGuide = () => {
+        if (installModal) installModal.classList.add('hidden');
+      };
+      const btnOpenInstall = document.getElementById('btn-open-install-guide');
+      if (btnOpenInstall) btnOpenInstall.addEventListener('click', openInstallGuide);
+      const btnCloseInstall = document.getElementById('btn-close-install-modal');
+      if (btnCloseInstall) btnCloseInstall.addEventListener('click', closeInstallGuide);
+      const btnCloseInstallDone = document.getElementById('btn-close-install-guide-done');
+      if (btnCloseInstallDone) btnCloseInstallDone.addEventListener('click', closeInstallGuide);
+
+      const btnDownloadApp = document.getElementById('btn-download-app-file');
+      if (btnDownloadApp) {
+        btnDownloadApp.addEventListener('click', () => {
+          const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+          downloadFile(htmlContent, 'food_tracker.html', 'text/html;charset=utf-8');
+          showToast('קובץ האפליקציה הורד בהצלחה!', 'success');
+        });
+      }
+
+      // Settings modal
+      document.getElementById('btn-open-settings').addEventListener('click', () => {
+        document.getElementById('setting-goal-cals').value = appState.settings.goalCalories || 2000;
+        document.getElementById('setting-goal-protein').value = appState.settings.goalProtein || 140;
+        document.getElementById('setting-gemini-key').value = (appState.settings && appState.settings.geminiApiKey) || '';
+        document.getElementById('modal-settings').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-settings-modal').addEventListener('click', () => {
+        document.getElementById('modal-settings').classList.add('hidden');
+      });
+
+      // Close meal summary modal
+      document.getElementById('btn-close-meal-summary').addEventListener('click', () => {
+        document.getElementById('modal-meal-summary').classList.add('hidden');
+      });
+
+      // Category filter pills
+      document.querySelectorAll('#category-filter-pills .cat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('#category-filter-pills .cat-pill').forEach(p => {
+            p.className = 'cat-pill px-2 py-1 rounded-xl text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all shrink-0';
+          });
+          pill.className = 'cat-pill px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-900 text-white transition-all shrink-0';
+
+          appState.activeCategory = pill.getAttribute('data-cat');
+          renderFoodButtons();
+        });
+      });
+
+      // Food search
+      const searchInput = document.getElementById('food-search-input');
+      searchInput.addEventListener('input', (e) => {
+        appState.searchQuery = e.target.value;
+        renderFoodButtons();
+      });
+
+      // Meal Type manual selection
+      document.querySelectorAll('#meal-type-selector .meal-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const type = btn.getAttribute('data-type');
+          appState.currentMeal.type = type;
+          updateMealTypePillsUI(type);
+
+          const autoBadge = document.getElementById('meal-type-auto-badge');
+          autoBadge.innerHTML = '<span>מותאם ידנית</span>';
+          autoBadge.className = 'text-[10px] sm:text-xs bg-slate-100 text-slate-600 border border-slate-200 font-medium px-2 py-0.5 rounded-full flex items-center gap-1';
+        });
+      });
+    }
+
+    // ==========================================
+    // 12. UTILITIES & TOASTS
+    // ==========================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const bgMap = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        warning: 'bg-amber-500 text-slate-950',
+        info: 'bg-slate-900 text-white'
+      };
+
+      const iconMap = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+      };
+
+      toast.className = `${bgMap[type] || bgMap.info} px-3.5 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 pointer-events-auto animate-pop transition-all`;
+      toast.innerHTML = `<span>${iconMap[type] || 'ℹ️'}</span><span>${escapeHtml(message)}</span>`;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 2600);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ==========================================
+    // 13. INITIALIZATION
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStateFromStorage();
+      initCurrentMeal();
+      setupModalsAndTabs();
+      setupAddFoodForm();
+      setupDailyLogView();
+      setupAnalyticsView();
+      setupExportAndSettings();
+
+      renderFoodButtons();
+      renderAllTrayViews();
+      updateMiniTodaySnapshot();
+    });
+  </script>
+</body>
+</html>
